@@ -1993,7 +1993,7 @@ module.exports = function(Chart) {
 			var vscale = me.getValueScale();
 			var base = vscale.getBasePixel();
 			var horizontal = vscale.isHorizontal();
-			var ruler = (!me._ruler || index >= me._ruler.length) ? me.getRuler() : me._ruler;
+			var ruler = me._ruler || me.getRuler();
 			var vpixels = me.calculateBarValuePixels(me.index, index);
 			var ipixels = me.calculateBarIndexPixels(me.index, index, ruler);
 
@@ -2073,55 +2073,25 @@ module.exports = function(Chart) {
 		getRuler: function() {
 			var me = this;
 			var scale = me.getIndexScale();
-			var options = scale.options;
 			var stackCount = me.getStackCount();
 			var datasetIndex = me.index;
-			var length = me.getMeta().data.length;
 			var pixels = [];
-			var ruler = [];
 			var isHorizontal = scale.isHorizontal();
-			var min = isHorizontal ? scale.left : scale.top;
-			var max = min + (isHorizontal ? scale.width : scale.height);
-			var i, leftSampleSize, rightSampleSize, leftCategorySize, rightCategorySize, fullBarSize, barSize;
+			var start = isHorizontal ? scale.left : scale.top;
+			var end = start + (isHorizontal ? scale.width : scale.height);
+			var i, ilen;
 
-			// First pass: store data pixels
-			for (i = 0; i < length; ++i) {
+			for (i = 0, ilen = me.getMeta().data.length; i < ilen; ++i) {
 				pixels.push(scale.getPixelForValue(null, i, datasetIndex));
 			}
 
-			// Second pass: calculate the left and right half of bar size separately
-			for (i = 0; i < length; ++i) {
-				if (i > 0) {
-					leftSampleSize = (pixels[i] - pixels[i - 1]) / 2; // half of the left interval
-				} else if (length > 1) {
-					leftSampleSize = (pixels[1] - pixels[0]) / 2; // half of the right interval
-				} else {
-					leftSampleSize = pixels[0] > min ? pixels[0] - min : max - pixels[0];
-				}
-				if (i < length - 1) {
-					rightSampleSize = (pixels[i + 1] - pixels[i]) / 2; // half of the right interval
-				} else if (length > 1) {
-					rightSampleSize = (pixels[length - 1] - pixels[length - 2]) / 2; // half of the left interval
-				} else {
-					rightSampleSize = pixels[0] < max ? max - pixels[0] : pixels[0] - min;
-				}
-				leftCategorySize = leftSampleSize * options.categoryPercentage;
-				rightCategorySize = rightSampleSize * options.categoryPercentage;
-				fullBarSize = (leftCategorySize + rightCategorySize) / stackCount;
-				barSize = fullBarSize * options.barPercentage;
-
-				barSize = Math.min(
-					helpers.valueOrDefault(options.barThickness, barSize),
-					helpers.valueOrDefault(options.maxBarThickness, Infinity));
-
-				ruler.push({
-					base: pixels[i] - leftCategorySize + (fullBarSize - barSize) / 2,
-					fullBarSize: fullBarSize,
-					barSize: barSize
-				});
-			}
-
-			return ruler;
+			return {
+				pixels: pixels,
+				start: start,
+				end: end,
+				stackCount: stackCount,
+				scale: scale
+			};
 		},
 
 		/**
@@ -2174,11 +2144,45 @@ module.exports = function(Chart) {
 		 */
 		calculateBarIndexPixels: function(datasetIndex, index, ruler) {
 			var me = this;
+			var options = ruler.scale.options;
 			var stackIndex = me.getStackIndex(datasetIndex);
-			var base = ruler[index].base;
-			var size = ruler[index].barSize;
+			var pixels = ruler.pixels;
+			var base = pixels[index];
+			var length = pixels.length;
+			var start = ruler.start;
+			var end = ruler.end;
+			var leftSampleSize, rightSampleSize, leftCategorySize, rightCategorySize, fullBarSize, size;
 
-			base += ruler[index].fullBarSize * stackIndex;
+			if (length === 1) {
+				leftSampleSize = base > start ? base - start : end - base;
+				rightSampleSize = base < end ? end - base : base - start;
+			} else {
+				if (index > 0) {
+					leftSampleSize = (base - pixels[index - 1]) / 2;
+					if (index === length - 1) {
+						rightSampleSize = leftSampleSize;
+					}
+				}
+				if (index < length - 1) {
+					rightSampleSize = (pixels[index + 1] - base) / 2;
+					if (index === 0) {
+						leftSampleSize = rightSampleSize;
+					}
+				}
+			}
+
+			leftCategorySize = leftSampleSize * options.categoryPercentage;
+			rightCategorySize = rightSampleSize * options.categoryPercentage;
+			fullBarSize = (leftCategorySize + rightCategorySize) / ruler.stackCount;
+			size = fullBarSize * options.barPercentage;
+
+			size = Math.min(
+				helpers.valueOrDefault(options.barThickness, size),
+				helpers.valueOrDefault(options.maxBarThickness, Infinity));
+
+			base -= leftCategorySize;
+			base += fullBarSize * stackIndex;
+			base += (fullBarSize - size) / 2;
 
 			return {
 				size: size,
@@ -4345,7 +4349,6 @@ module.exports = function(Chart) {
 				_data: me.data,
 				_options: me.options.tooltips
 			}, me);
-			me.tooltip.initialize();
 		},
 
 		/**
@@ -6858,6 +6861,19 @@ function labelsFromTicks(ticks) {
 	return labels;
 }
 
+function getLineValue(scale, index, offsetGridLines) {
+	var lineValue = scale.getPixelForTick(index);
+
+	if (offsetGridLines) {
+		if (index === 0) {
+			lineValue -= (scale.getPixelForTick(1) - lineValue) / 2;
+		} else {
+			lineValue -= (lineValue - scale.getPixelForTick(index - 1)) / 2;
+		}
+	}
+	return lineValue;
+}
+
 module.exports = function(Chart) {
 
 	function computeTextSize(context, tick, font) {
@@ -7088,7 +7104,7 @@ module.exports = function(Chart) {
 			var me = this;
 			// Convert ticks to strings
 			var tickOpts = me.options.ticks;
-			me.ticks = me.ticks.map(tickOpts.userCallback || tickOpts.callback);
+			me.ticks = me.ticks.map(tickOpts.userCallback || tickOpts.callback, this);
 		},
 		afterTickToLabelConversion: function() {
 			helpers.callback(this.options.afterTickToLabelConversion, [this]);
@@ -7484,18 +7500,9 @@ module.exports = function(Chart) {
 						labelY = me.bottom - labelYOffset;
 					}
 
-					var xLineValue; // xvalues for grid lines
-					if (gridLines.offsetGridLines && ticks.length > 1) {
-						if (index === 0) {
-							xLineValue = (me.getPixelForTick(0) * 3 - me.getPixelForTick(1)) / 2;
-							if (xLineValue < me.left) {
-								lineColor = 'rgba(0,0,0,0)';
-							}
-						} else {
-							xLineValue = (me.getPixelForTick(index - 1) + me.getPixelForTick(index)) / 2;
-						}
-					} else {
-						xLineValue = me.getPixelForTick(index);
+					var xLineValue = getLineValue(me, index, gridLines.offsetGridLines && ticks.length > 1);
+					if (xLineValue < me.left) {
+						lineColor = 'rgba(0,0,0,0)';
 					}
 					xLineValue += helpers.aliasPixel(lineWidth);
 
@@ -7520,18 +7527,9 @@ module.exports = function(Chart) {
 
 					labelX = isLeft ? me.right - labelXOffset : me.left + labelXOffset;
 
-					var yLineValue; // yvalues for grid lines
-					if (gridLines.offsetGridLines && ticks.length > 1) {
-						if (index === 0) {
-							yLineValue = (me.getPixelForTick(0) * 3 - me.getPixelForTick(1)) / 2;
-							if (yLineValue < me.top) {
-								lineColor = 'rgba(0,0,0,0)';
-							}
-						} else {
-							yLineValue = (me.getPixelForTick(index - 1) + me.getPixelForTick(index)) / 2;
-						}
-					} else {
-						yLineValue = me.getPixelForTick(index);
+					var yLineValue = getLineValue(me, index, gridLines.offsetGridLines && ticks.length > 1);
+					if (yLineValue < me.top) {
+						lineColor = 'rgba(0,0,0,0)';
 					}
 					yLineValue += helpers.aliasPixel(lineWidth);
 
@@ -13483,6 +13481,49 @@ function generate(min, max, minor, major, capacity, options) {
 	return ticks;
 }
 
+/**
+ * Returns the right and left offsets from edges in the form of {left, right}.
+ * Offsets are added when the `offset` option is true.
+ */
+function computeOffsets(table, ts, min, max, options) {
+	var left = 0;
+	var right = 0;
+	var timestamps = [];
+	var i, ilen, timestamp, length, upper, lower, divisor;
+
+	if (options.offset) {
+		[ts.labels, ts.data].forEach(function(data) {
+			// Remove labels outside the min/max range
+			for (i = 0, ilen = data.length; i < ilen; ++i) {
+				timestamp = data[i];
+				if (timestamp >= min && timestamp <= max) {
+					timestamps.push(timestamp);
+				}
+			}
+			if (timestamps.length) {
+				return;
+			}
+		});
+
+		length = timestamps.length;
+		if (length) {
+			divisor = length > 1 ? 2 : 1;
+			if (!options.time.min) {
+				upper = length > 1 ? interpolate(table, 'time', timestamps[1], 'pos') : 1;
+				lower = interpolate(table, 'time', timestamps[0], 'pos');
+				left = Math.max((upper - lower) / divisor - lower, 0);
+			}
+			if (!options.time.max) {
+				upper = interpolate(table, 'time', timestamps[length - 1], 'pos');
+				lower = length > 1 ? interpolate(table, 'time', timestamps[length - 2], 'pos') : 0;
+				right = Math.max((upper - lower) / divisor - (1 - upper), 0);
+			}
+		}
+	}
+
+	return {left: left, right: right};
+}
+
 function ticksFromTimestamps(values, majorUnit) {
 	var ticks = [];
 	var i, ilen, value, major;
@@ -13715,37 +13756,7 @@ module.exports = function(Chart) {
 			me._minorFormat = formats[unit];
 			me._majorFormat = formats[majorUnit];
 			me._table = buildLookupTable(me._timestamps.data, min, max, options.distribution);
-			me._leftOffset = 0;
-			me._rightOffset = 0;
-
-			if (options.offset && ticks.length) {
-				if (!timeOpts.min) {
-					if (ticks.length > 1) {
-						me._leftOffset = (
-							interpolate(me._table, 'time', ticks[1], 'pos') -
-							interpolate(me._table, 'time', ticks[0], 'pos')
-						) / 2;
-					} else {
-						me._leftOffset = (
-							interpolate(me._table, 'time', max, 'pos') -
-							interpolate(me._table, 'time', ticks[0], 'pos')
-						);
-					}
-				}
-				if (!timeOpts.max) {
-					if (ticks.length > 1) {
-						me._rightOffset = (
-							interpolate(me._table, 'time', ticks[ticks.length - 1], 'pos') -
-							interpolate(me._table, 'time', ticks[ticks.length - 2], 'pos')
-						) / 2;
-					} else {
-						me._rightOffset = (
-							interpolate(me._table, 'time', ticks[ticks.length - 1], 'pos') -
-							interpolate(me._table, 'time', min, 'pos')
-						);
-					}
-				}
-			}
+			me._offsets = computeOffsets(me._table, me._timestamps, min, max, options);
 
 			return ticksFromTimestamps(ticks, majorUnit);
 		},
@@ -13806,7 +13817,7 @@ module.exports = function(Chart) {
 			var start = me._horizontal ? me.left : me.top;
 			var pos = interpolate(me._table, 'time', time, 'pos');
 
-			return start + size * (me._leftOffset + pos) / (me._leftOffset + 1 + me._rightOffset);
+			return start + size * (me._offsets.left + pos) / (me._offsets.left + 1 + me._offsets.right);
 		},
 
 		getPixelForValue: function(value, index, datasetIndex) {
@@ -13837,7 +13848,7 @@ module.exports = function(Chart) {
 			var me = this;
 			var size = me._horizontal ? me.width : me.height;
 			var start = me._horizontal ? me.left : me.top;
-			var pos = (size ? (pixel - start) / size : 0) * (me._leftOffset + 1 + me._rightOffset) - me._leftOffset;
+			var pos = (size ? (pixel - start) / size : 0) * (me._offsets.left + 1 + me._offsets.left) - me._offsets.right;
 			var time = interpolate(me._table, 'pos', pos, 'time');
 
 			return moment(time);
