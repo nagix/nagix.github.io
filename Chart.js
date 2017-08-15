@@ -13493,15 +13493,14 @@ function computeOffsets(table, ts, min, max, options) {
 
 	if (options.offset) {
 		[ts.labels, ts.data].forEach(function(data) {
-			// Remove labels outside the min/max range
-			for (i = 0, ilen = data.length; i < ilen; ++i) {
-				timestamp = data[i];
-				if (timestamp >= min && timestamp <= max) {
-					timestamps.push(timestamp);
+			if (!timestamps.length) {
+				// Remove labels outside the min/max range
+				for (i = 0, ilen = data.length; i < ilen; ++i) {
+					timestamp = data[i];
+					if (timestamp >= min && timestamp <= max) {
+						timestamps.push(timestamp);
+					}
 				}
-			}
-			if (timestamps.length) {
-				return;
 			}
 		});
 
