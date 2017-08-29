@@ -13485,24 +13485,19 @@ function generate(min, max, minor, major, capacity, options) {
  * Returns the right and left offsets from edges in the form of {left, right}.
  * Offsets are added when the `offset` option is true.
  */
-function computeOffsets(table, ts, min, max, options) {
+function computeOffsets(table, data, min, max, options) {
 	var left = 0;
 	var right = 0;
 	var timestamps = [];
 	var i, ilen, timestamp, length, upper, lower, divisor;
 
 	if (options.offset) {
-		[ts.labels, ts.data].forEach(function(data) {
-			if (!timestamps.length) {
-				// Remove labels outside the min/max range
-				for (i = 0, ilen = data.length; i < ilen; ++i) {
-					timestamp = data[i];
-					if (timestamp >= min && timestamp <= max) {
-						timestamps.push(timestamp);
-					}
-				}
+		for (i = 0, ilen = data.length; i < ilen; ++i) {
+			timestamp = data[i];
+			if (timestamp >= min && timestamp <= max) {
+				timestamps.push(timestamp);
 			}
-		});
+		}
 
 		length = timestamps.length;
 		if (length) {
@@ -13755,7 +13750,7 @@ module.exports = function(Chart) {
 			me._minorFormat = formats[unit];
 			me._majorFormat = formats[majorUnit];
 			me._table = buildLookupTable(me._timestamps.data, min, max, options.distribution);
-			me._offsets = computeOffsets(me._table, me._timestamps, min, max, options);
+			me._offsets = computeOffsets(me._table, me._timestamps.data, min, max, options);
 
 			return ticksFromTimestamps(ticks, majorUnit);
 		},
