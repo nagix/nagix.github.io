@@ -639,25 +639,28 @@ var streamingPlugin = function(Chart$$1) {
 			var scalesOpts = chartOpts.scales;
 			var realtimeOpts;
 
-			chartOpts.elements.line.capBezierPoints = false;
+			if (scalesOpts) {
+				scalesOpts.xAxes.concat(scalesOpts.yAxes).forEach(function(scaleOpts) {
+					if (scaleOpts.type === 'realtime' || scaleOpts.type === 'time') {
+						realtimeOpts = scaleOpts.realtime;
 
-			scalesOpts.xAxes.concat(scalesOpts.yAxes).forEach(function(scaleOpts) {
-				if (scaleOpts.type === 'realtime' || scaleOpts.type === 'time') {
-					realtimeOpts = scaleOpts.realtime;
+						// For backwards compatibility
+						if (!realtimeOpts) {
+							realtimeOpts = scaleOpts.realtime = {};
+						}
 
-					// For backwards compatibility
-					if (!realtimeOpts) {
-						realtimeOpts = scaleOpts.realtime = {};
+						// Copy plugin options to scale options
+						realtimeOpts.duration = options.duration;
+						realtimeOpts.refresh = options.refresh;
+						realtimeOpts.delay = options.delay;
+						realtimeOpts.frameRate = options.frameRate;
+						realtimeOpts.onRefresh = onRefresh;
+
+						// Keep Bézier control inside the chart
+						chartOpts.elements.line.capBezierPoints = false;
 					}
-
-					// Copy plugin options to scale options
-					realtimeOpts.duration = options.duration;
-					realtimeOpts.refresh = options.refresh;
-					realtimeOpts.delay = options.delay;
-					realtimeOpts.frameRate = options.frameRate;
-					realtimeOpts.onRefresh = onRefresh;
-				}
-			});
+				});
+			}
 			return true;
 		},
 
