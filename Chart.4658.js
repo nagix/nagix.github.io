@@ -14035,23 +14035,23 @@ function computeOffsets(table, ticks, data, min, max, options) {
 		if (length) {
 			if (!timeOpts.min) {
 				first = interpolate(table, 'time', timestamps[0], 'pos');
-				if (!options.barThickness) {
-					width = minInterval;
-				} else if (length === 1) {
+				if (length === 1) {
 					width = (1 - first) * 2;
-				} else {
+				} else if (options.barThickness) {
 					width = interpolate(table, 'time', timestamps[1], 'pos') - first;
+				} else {
+					width = minInterval;
 				}
 				left = Math.max(width / 2 - first, 0);
 			}
 			if (!timeOpts.max) {
 				last = interpolate(table, 'time', timestamps[length - 1], 'pos');
-				if (!options.barThickness) {
-					width = minInterval;
-				} else if (length === 1) {
+				if (length === 1) {
 					width = last * 2;
-				} else {
+				} else if (options.barThickness) {
 					width = last - interpolate(table, 'time', timestamps[length - 2], 'pos');
+				} else {
+					width = minInterval;
 				}
 				right = Math.max(width / 2 - (1 - last), 0);
 			}
