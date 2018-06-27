@@ -14315,7 +14315,7 @@ module.exports = function() {
 			me._unit = timeOpts.unit || determineUnitForFormatting(ticks, timeOpts.minUnit, me.min, me.max);
 			me._majorUnit = determineMajorUnit(me._unit);
 			me._table = buildLookupTable(me._timestamps.data, min, max, options.distribution);
-			me._offsets = computeOffsets(me._table, ticks, me._timestamps.data, me._timestamps.data, min, max, options);
+			me._offsets = computeOffsets(me._table, ticks, me._timestamps.data, min, max, options);
 			me._labelFormat = determineLabelFormat(me._timestamps.data, timeOpts);
 
 			return ticksFromTimestamps(ticks, me._majorUnit);
