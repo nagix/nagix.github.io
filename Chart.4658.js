@@ -14007,11 +14007,12 @@ function generate(min, max, capacity, options) {
  * Offsets are added when the `offset` option is true.
  */
 function computeOffsets(table, ticks, data, min, max, options) {
+	var minInterval = 1;
 	var left = 0;
 	var right = 0;
 	var timestamps = [];
 	var timeOpts = options.time;
-	var i, ilen, curr, prev, minInterval, length, first, last, width;
+	var i, ilen, curr, prev, length, first, last, width;
 
 	if (options.offset) {
 		data.forEach(function(timestamp) {
@@ -14024,7 +14025,7 @@ function computeOffsets(table, ticks, data, min, max, options) {
 			[data, ticks].forEach(function(arr) {
 				for (i = 0, ilen = arr.length; i < ilen; ++i) {
 					curr = interpolate(table, 'time', arr[i], 'pos');
-					minInterval = i > 0 ? Math.min(minInterval, curr - prev) : 1;
+					minInterval = i > 0 ? Math.min(minInterval, curr - prev) : minInterval;
 					prev = curr;
 				}
 			});
