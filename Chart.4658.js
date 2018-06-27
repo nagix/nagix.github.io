@@ -14011,7 +14011,7 @@ function computeOffsets(table, ticks, data, min, max, options) {
 	var right = 0;
 	var timestamps = [];
 	var timeOpts = options.time;
-	var i, ilen, length, upper, lower, minInterval;
+	var i, ilen, curr, prev, minInterval, length, first, last, width;
 
 	if (options.offset) {
 		data.forEach(function(timestamp) {
@@ -14020,32 +14020,40 @@ function computeOffsets(table, ticks, data, min, max, options) {
 			}
 		});
 
+		if (!options.barThickness) {
+			[data, ticks].forEach(function(arr) {
+				for (i = 0, ilen = arr.length; i < ilen; ++i) {
+					curr = interpolate(table, 'time', arr[i], 'pos');
+					minInterval = i > 0 ? Math.min(minInterval, curr - prev) : 1;
+					prev = curr;
+				}
+			});
+		}
+
 		length = timestamps.length;
-		if (length > 1) {
-			if (options.barThickness) {
-				if (!timeOpts.min) {
-					upper = interpolate(table, 'time', timestamps[1], 'pos');
-					lower = interpolate(table, 'time', timestamps[0], 'pos');
-					left = Math.max((upper - lower) / 2 - lower, 0);
+		if (length) {
+			if (!timeOpts.min) {
+				first = interpolate(table, 'time', timestamps[0], 'pos');
+				if (length === 1) {
+					width = (1 - first) * 2;
+				} else if (options.barThickness) {
+					width = interpolate(table, 'time', timestamps[1], 'pos') - first;
+				} else {
+					width = minInterval;
 				}
-				if (!timeOpts.max) {
-					upper = interpolate(table, 'time', timestamps[length - 1], 'pos');
-					lower = interpolate(table, 'time', timestamps[length - 2], 'pos');
-					right = Math.max((upper - lower) / 2 - (1 - upper), 0);
-				}
-			} else {
-				[data, ticks].forEach(function(arr) {
-					for (i = 0, ilen = arr.length; i < ilen; ++i) {
-						upper = interpolate(table, 'time', arr[i], 'pos');
-						minInterval = i > 0 ? Math.min(minInterval, upper - lower) : 1;
-						lower = upper;
-					}
-				});
-				left = timeOpts.min ? 0 : minInterval / 2;
-				right = timeOpts.max ? 0 : minInterval / 2;
+				left = Math.max(width / 2 - first, 0);
 			}
-		} else if (length === 1 && !timeOpts.max) {
-			right = 1;
+			if (!timeOpts.max) {
+				last = interpolate(table, 'time', timestamps[length - 1], 'pos');
+				if (length === 1) {
+					width = last * 2;
+				} else if (options.barThickness) {
+					width = last - interpolate(table, 'time', timestamps[length - 2], 'pos');
+				} else {
+					width = minInterval;
+				}
+				right = Math.max(width / 2 - (1 - last), 0);
+			}
 		}
 	}
 
