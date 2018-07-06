@@ -11450,11 +11450,13 @@ defaults._set('global', {
 					var type = chart.getDatasetMeta(i).type;
 					var options = chart.options;
 					var legendOpts = options.legend;
+					var valueAtIndexOrDefault = helpers.valueAtIndexOrDefault;
+					var valueOrDefault = helpers.valueOrDefault;
 
 					var usePointStyle = legendOpts && legendOpts.labels && legendOpts.labels.usePointStyle;
-					var backgroundColor = usePointStyle ? dataset.pointBackgroundColor : dataset.backgroundColor;
-					var borderWidth = usePointStyle ? dataset.pointBorderWidth : dataset.borderWidth;
-					var borderColor = usePointStyle ? dataset.pointBorderColor : dataset.borderColor;
+					var backgroundColor = usePointStyle ? valueAtIndexOrDefault(dataset.pointBackgroundColor, 0, dataset.backgroundColor) : dataset.backgroundColor;
+					var borderWidth = usePointStyle ? valueAtIndexOrDefault(dataset.pointBorderWidth, 0, dataset.borderWidth) : dataset.borderWidth;
+					var borderColor = usePointStyle ? valueAtIndexOrDefault(dataset.pointBorderColor, 0, dataset.borderColor) : dataset.borderColor;
 
 					var useLineStyles = (type === 'line' || type === 'radar') && !usePointStyle;
 					var borderCapStyle = useLineStyles ? dataset.borderCapStyle : 'butt';
@@ -11462,8 +11464,6 @@ defaults._set('global', {
 					var borderDashOffset = useLineStyles ? dataset.borderDashOffset : 0;
 					var borderJoinStyle = useLineStyles ? dataset.borderJoinStyle : 'miter';
 
-					var valueAtIndexOrDefault = helpers.valueAtIndexOrDefault;
-					var valueOrDefault = helpers.valueOrDefault;
 					var elementOpts = options.elements[useLineStyles ? 'line' : type === 'bar' ? 'rectangle' : 'point'];
 
 					return {
