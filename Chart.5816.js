@@ -11705,7 +11705,7 @@ var Legend = Element.extend({
 					var boxWidth = getBoxWidth(labelOpts, fontSize);
 					var width = boxWidth + (fontSize / 2) + ctx.measureText(legendItem.text).width;
 
-					if (i === 0 || lineWidths[lineWidths.length - 1] + width + labelOpts.padding > me.width) {
+					if (i === 0 || lineWidths[lineWidths.length - 1] + width + labelOpts.padding > minSize.width) {
 						totalHeight += fontSize + labelOpts.padding;
 						lineWidths[lineWidths.length - (i > 0 ? 0 : 1)] = labelOpts.padding;
 					}
@@ -11736,7 +11736,7 @@ var Legend = Element.extend({
 					var itemWidth = boxWidth + (fontSize / 2) + ctx.measureText(legendItem.text).width;
 
 					// If too tall, go to new column
-					if (i > 0 && currentColHeight + itemHeight + labelOpts.padding > minSize.height) {
+					if (i > 0 && currentColHeight + itemHeight > minSize.height - vPadding) {
 						totalWidth += currentColWidth + labelOpts.padding;
 						columnWidths.push(currentColWidth); // previous column width
 
@@ -11886,13 +11886,16 @@ var Legend = Element.extend({
 				var x = cursor.x;
 				var y = cursor.y;
 
+				// Use (me.left + me.minSize.width) and (me.top + me.minSize.height)
+				// instead of me.right and me.bottom because me.width and me.height
+				// may have been changed since me.minSize was calculated
 				if (isHorizontal) {
-					if (i > 0 && x + width + labelOpts.padding > me.right) {
+					if (i > 0 && x + width + labelOpts.padding > me.left + me.minSize.width) {
 						y = cursor.y += itemHeight;
 						cursor.line++;
 						x = cursor.x = me.left + ((legendWidth - lineWidths[cursor.line]) / 2) + labelOpts.padding;
 					}
-				} else if (i > 0 && y + itemHeight > me.bottom) {
+				} else if (i > 0 && y + itemHeight > me.top + me.minSize.height) {
 					x = cursor.x = x + me.columnWidths[cursor.line] + labelOpts.padding;
 					y = cursor.y = me.top + labelOpts.padding;
 					cursor.line++;
