@@ -2738,8 +2738,8 @@ module.exports = function(Chart) {
 			var chartArea = chart.chartArea;
 			var opts = chart.options;
 			var arcOpts = opts.elements.arc;
-			var availableWidth = chartArea.right - chartArea.left - arcOpts.borderWidth;
-			var availableHeight = chartArea.bottom - chartArea.top - arcOpts.borderWidth;
+			var availableWidth = chartArea.right - chartArea.left;
+			var availableHeight = chartArea.bottom - chartArea.top;
 			var minSize = Math.min(availableWidth, availableHeight);
 			var offset = {x: 0, y: 0};
 			var meta = me.getMeta();
@@ -2765,8 +2765,10 @@ module.exports = function(Chart) {
 				offset = {x: (max.x + min.x) * -0.5, y: (max.y + min.y) * -0.5};
 			}
 
+			// This is no longer used, but left for backward compatibility
 			chart.borderWidth = me.getMaxBorderWidth(meta.data);
-			chart.outerRadius = Math.max((minSize - chart.borderWidth) / 2, 0);
+
+			chart.outerRadius = Math.max(minSize / 2, 0);
 			chart.innerRadius = Math.max(cutoutPercentage ? (chart.outerRadius / 100) * (cutoutPercentage) : 0, 0);
 			chart.radiusLength = (chart.outerRadius - chart.innerRadius) / chart.getVisibleDatasetCount();
 			chart.offsetX = offset.x * chart.outerRadius;
@@ -3389,7 +3391,7 @@ module.exports = function(Chart) {
 			var arcOpts = opts.elements.arc;
 			var minSize = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
 
-			chart.outerRadius = Math.max((minSize - arcOpts.borderWidth / 2) / 2, 0);
+			chart.outerRadius = Math.max(minSize / 2, 0);
 			chart.innerRadius = Math.max(opts.cutoutPercentage ? (chart.outerRadius / 100) * (opts.cutoutPercentage) : 1, 0);
 			chart.radiusLength = (chart.outerRadius - chart.innerRadius) / chart.getVisibleDatasetCount();
 
