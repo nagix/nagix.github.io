@@ -13437,7 +13437,7 @@ module.exports = function(Chart) {
 	 */
 	function fit(scale) {
 		var largestPossibleRadius = Math.min(scale.height / 2, scale.width / 2);
-		scale.drawingArea = Math.round(largestPossibleRadius);
+		scale.drawingArea = Math.floor(largestPossibleRadius);
 		scale.setCenterPoint(0, 0, 0, 0);
 	}
 
@@ -13562,8 +13562,8 @@ module.exports = function(Chart) {
 			// Set the unconstrained dimension before label rotation
 			me.width = me.maxWidth;
 			me.height = me.maxHeight;
-			me.xCenter = Math.round(me.width / 2);
-			me.yCenter = Math.round(me.height / 2);
+			me.xCenter = Math.floor(me.width / 2);
+			me.yCenter = Math.floor(me.height / 2);
 
 			var minSize = helpers.min([me.height, me.width]);
 			var tickFontSize = helpers.valueOrDefault(tickOpts.fontSize, globalDefaults.defaultFontSize);
@@ -13626,7 +13626,7 @@ module.exports = function(Chart) {
 			}
 			if (tickOpts.display && opts.display) {
 				tickFontSize = helpers.valueOrDefault(tickOpts.fontSize, globalDefaults.defaultFontSize);
-				me.paddingTop = Math.max(me.drawingArea + tickFontSize / 2 - Math.round(me.height / 2), 0);
+				me.paddingTop = Math.max(me.drawingArea + tickFontSize / 2 - Math.floor(me.height / 2), 0);
 			}
 		},
 		/**
@@ -13646,8 +13646,8 @@ module.exports = function(Chart) {
 			radiusReductionBottom = numberOrZero(radiusReductionBottom);
 
 			me.drawingArea = Math.min(
-				Math.round(largestPossibleRadius - (radiusReductionLeft + radiusReductionRight) / 2),
-				Math.round(largestPossibleRadius - (radiusReductionTop + radiusReductionBottom) / 2));
+				Math.floor(largestPossibleRadius - (radiusReductionLeft + radiusReductionRight) / 2),
+				Math.floor(largestPossibleRadius - (radiusReductionTop + radiusReductionBottom) / 2));
 			me.setCenterPoint(radiusReductionLeft, radiusReductionRight, radiusReductionTop, radiusReductionBottom);
 		},
 		setCenterPoint: function(leftMovement, rightMovement, topMovement, bottomMovement) {
@@ -13657,8 +13657,8 @@ module.exports = function(Chart) {
 			var maxTop = topMovement + me.drawingArea;
 			var maxBottom = me.height - bottomMovement - me.drawingArea;
 
-			me.xCenter = Math.round(((maxLeft + maxRight) / 2) + me.left);
-			me.yCenter = Math.round(((maxTop + maxBottom) / 2) + me.top);
+			me.xCenter = Math.floor(((maxLeft + maxRight) / 2) + me.left);
+			me.yCenter = Math.floor(((maxTop + maxBottom) / 2) + me.top);
 		},
 
 		getIndexAngle: function(index) {
