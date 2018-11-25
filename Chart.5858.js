@@ -3206,14 +3206,10 @@ module.exports = function(Chart) {
 				helpers.canvas.unclipArea(chart.ctx);
 			}
 
-			console.time("sw")
-
 			// Draw the points
-			for (i = 0; i < ilen; ++i) {
+			for (; i < ilen; ++i) {
 				points[i].draw(area);
 			}
-
-			console.timeEnd("sw")
 		},
 
 		setHoverStyle: function(element) {
@@ -9723,12 +9719,12 @@ module.exports.Rectangle = require(40);
 
 var helpers = require(43);
 
-var RAD_PER_DEG = Math.PI / 180;
-var DOUBLE_PI = Math.PI * 2;
-var HALF_PI = Math.PI / 2;
-var QUARTER_PI = Math.PI / 4;
-var TWO_THIRDS_PI = Math.PI * 2 / 3;
-var ROUND_RECT_SIZE_FACTOR = 1 / (1 - (Math.SQRT2 - 1) * 0.425);
+var PI = Math.PI;
+var RAD_PER_DEG = PI / 180;
+var DOUBLE_PI = PI * 2;
+var HALF_PI = PI / 2;
+var QUARTER_PI = PI / 4;
+var TWO_THIRDS_PI = PI * 2 / 3;
 
 /**
  * @namespace Chart.helpers.canvas
@@ -9755,20 +9751,26 @@ var exports = module.exports = {
 	 */
 	roundedRect: function(ctx, x, y, width, height, radius) {
 		if (radius) {
-			// NOTE(SB) `epsilon` helps to prevent minor artifacts appearing
-			// on Chrome when `r` is exactly half the height or the width.
-			var epsilon = 0.0000001;
-			var r = Math.min(radius, (height / 2) - epsilon, (width / 2) - epsilon);
+			var r = Math.min(radius, height / 2, width / 2);
+			var left = x + r;
+			var top = y + r;
+			var right = x + width - r;
+			var bottom = y + height - r;
 
-			ctx.moveTo(x + r, y);
-			ctx.lineTo(x + width - r, y);
-			ctx.arcTo(x + width, y, x + width, y + r, r);
-			ctx.lineTo(x + width, y + height - r);
-			ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
-			ctx.lineTo(x + r, y + height);
-			ctx.arcTo(x, y + height, x, y + height - r, r);
-			ctx.lineTo(x, y + r);
-			ctx.arcTo(x, y, x + r, y, r);
+			if (left < right && top < bottom) {
+				ctx.arc(left, top, r, -PI, -HALF_PI);
+				ctx.arc(right, top, r, -HALF_PI, 0);
+				ctx.arc(right, bottom, r, 0, HALF_PI);
+				ctx.arc(left, bottom, r, HALF_PI, PI);
+			} else if (left < right) {
+				ctx.arc(left, top, r, HALF_PI, PI + HALF_PI);
+				ctx.arc(right, top, r, -HALF_PI, HALF_PI);
+			} else if (top < bottom) {
+				ctx.arc(left, top, r, -PI, 0);
+				ctx.arc(left, bottom, r, 0, PI);
+			} else {
+				ctx.arc(left, top, r, 0, DOUBLE_PI);
+			}
 			ctx.closePath();
 			ctx.moveTo(x, y);
 		} else {
@@ -9809,29 +9811,19 @@ var exports = module.exports = {
 			ctx.closePath();
 			break;
 		case 'rectRounded':
-			// NOTE(SB) the rounded rect implementation changed to use `arc`
-			// instead of `quadraticCurveTo` since it generates better results
-			// when rect is almost a circle. 0.425 (instead of 0.5) produces
-			// results visually closer to the previous impl.
-			cornerRadius = ROUND_RECT_SIZE_FACTOR * radius * 0.425;
+			// NOTE: the rounded rect implementation changed to use `arc` instead of
+			// `quadraticCurveTo` since it generates better results when rect is
+			// almost a circle. 0.516 (instead of 0.5) produces results with visually
+			// closer proportion to the previous impl and it is inscribed in the
+			// circle with `radius`. See #5597 and #5858 for more details.
+			cornerRadius = radius * 0.516;
 			size = radius - cornerRadius;
 			xOffset = Math.cos(rad + QUARTER_PI) * size;
 			yOffset = Math.sin(rad + QUARTER_PI) * size;
-			ctx.arc(x - xOffset, y - yOffset, cornerRadius, rad - Math.PI, rad - HALF_PI);
+			ctx.arc(x - xOffset, y - yOffset, cornerRadius, rad - PI, rad - HALF_PI);
 			ctx.arc(x + yOffset, y - xOffset, cornerRadius, rad - HALF_PI, rad);
 			ctx.arc(x + xOffset, y + yOffset, cornerRadius, rad, rad + HALF_PI);
-			ctx.arc(x - yOffset, y + xOffset, cornerRadius, rad + HALF_PI, rad + Math.PI);
-/*
-			size = ROUND_RECT_SIZE_FACTOR * radius;
-			cornerRadius = size * 0.425;
-			xOffset = Math.cos(rad + QUARTER_PI) * size;
-			yOffset = Math.sin(rad + QUARTER_PI) * size;
-			ctx.moveTo(x - Math.cos(rad) * Math.SQRT1_2 * size, y - Math.sin(rad) * Math.SQRT1_2 * size);
-			ctx.arcTo(x - xOffset, y - yOffset, x + yOffset, y - xOffset, cornerRadius);
-			ctx.arcTo(x + yOffset, y - xOffset, x + xOffset, y + yOffset, cornerRadius);
-			ctx.arcTo(x + xOffset, y + yOffset, x - yOffset, y + xOffset, cornerRadius);
-			ctx.arcTo(x - yOffset, y + xOffset, x - xOffset, y - yOffset, cornerRadius);
-*/
+			ctx.arc(x - yOffset, y + xOffset, cornerRadius, rad + HALF_PI, rad + PI);
 			ctx.closePath();
 			break;
 		case 'rect':
