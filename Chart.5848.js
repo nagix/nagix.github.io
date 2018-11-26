@@ -5811,14 +5811,14 @@ module.exports = function() {
 	helpers._calculatePadding = function(container, padding, parentDimension) {
 		padding = helpers.getStyle(container, padding);
 
-		return padding.indexOf('%') > -1 ? parentDimension / parseInt(padding, 10) : parseInt(padding, 10);
+		return padding.indexOf('%') > -1 ? parentDimension * parseInt(padding, 10) / 100 : parseInt(padding, 10);
 	};
 	/**
 	 * @private
 	 */
 	helpers._getParentNode = function(domNode) {
 		var parent = domNode.parentNode;
-		if (parent && parent.host) {
+		if (parent && parent.toString() === '[object ShadowRoot]') {
 			parent = parent.host;
 		}
 		return parent;
@@ -6556,10 +6556,6 @@ module.exports = {
 
 		helpers.each(leftBoxes.concat(rightBoxes, topBoxes, bottomBoxes), getMinimumBoxSize);
 
-		helpers.each(chartAreaBoxes, function(box) {
-			box.update(maxChartAreaWidth, maxChartAreaHeight);
-		});
-
 		// If a horizontal box has padding, we move the left boxes over to avoid ugly charts (see issue #2478)
 		var maxHorizontalLeftPadding = 0;
 		var maxHorizontalRightPadding = 0;
@@ -6574,7 +6570,7 @@ module.exports = {
 			}
 		});
 
-		helpers.each(leftBoxes.concat(rightBoxes, chartAreaBoxes), function(verticalBox) {
+		helpers.each(leftBoxes.concat(rightBoxes), function(verticalBox) {
 			if (verticalBox.getPadding) {
 				var boxPadding = verticalBox.getPadding();
 				maxVerticalTopPadding = Math.max(maxVerticalTopPadding, boxPadding.top);
@@ -7868,7 +7864,7 @@ module.exports = Element.extend({
 
 		var itemsToDraw = [];
 
-		var axisWidth = me.options.gridLines.lineWidth;
+		var axisWidth = helpers.valueAtIndexOrDefault(me.options.gridLines.lineWidth, 0);
 		var xTickStart = options.position === 'right' ? me.left : me.right - axisWidth - tl;
 		var xTickEnd = options.position === 'right' ? me.left + tl : me.right;
 		var yTickStart = options.position === 'bottom' ? me.top + axisWidth : me.bottom - tl - axisWidth;
@@ -10765,6 +10761,7 @@ var supportsEventListenerOptions = (function() {
 	var supports = false;
 	try {
 		var options = Object.defineProperty({}, 'passive', {
+			// eslint-disable-next-line getter-return
 			get: function() {
 				supports = true;
 			}
@@ -11048,6 +11045,7 @@ module.exports = {
 		// we can't use save() and restore() to restore the initial state. So make sure that at
 		// least the canvas context is reset to the default state by setting the canvas width.
 		// https://www.w3.org/TR/2011/WD-html5-20110525/the-canvas-element.html
+		// eslint-disable-next-line no-self-assign
 		canvas.width = canvas.width;
 
 		delete canvas[EXPANDO_KEY];
@@ -13314,6 +13312,16 @@ module.exports = function(Chart) {
 		};
 	}
 
+	function getTickFontSize(scale) {
+		var opts = scale.options;
+		var tickOpts = opts.ticks;
+
+		if (tickOpts.display && opts.display) {
+			return helpers.valueOrDefault(tickOpts.fontSize, globalDefaults.defaultFontSize);
+		}
+		return 0;
+	}
+
 	function measureLabelSize(ctx, fontSize, label) {
 		if (helpers.isArray(label)) {
 			return {
@@ -13380,6 +13388,7 @@ module.exports = function(Chart) {
 		 */
 
 		var plFont = getPointLabelFontOptions(scale);
+		var paddingTop = getTickFontSize(scale) / 2;
 
 		// Get maximum radius of the polygon. Either half the height (minus the text width) or half the width.
 		// Use this to calculate the offset + change. - Make sure L/R protrusion is at least 0 to stop issues with centre points
@@ -13429,6 +13438,11 @@ module.exports = function(Chart) {
 			}
 		}
 
+		if (paddingTop && -paddingTop < furthestLimits.t) {
+			furthestLimits.t = -paddingTop;
+			furthestAngles.t = 0;
+		}
+
 		scale.setReductions(largestPossibleRadius, furthestLimits, furthestAngles);
 	}
 
@@ -13436,9 +13450,10 @@ module.exports = function(Chart) {
 	 * Helper function to fit a radial linear scale with no point labels
 	 */
 	function fit(scale) {
-		var largestPossibleRadius = Math.min(scale.height / 2, scale.width / 2);
+		var paddingTop = getTickFontSize(scale) / 2;
+		var largestPossibleRadius = Math.min((scale.height - paddingTop) / 2, scale.width / 2);
 		scale.drawingArea = Math.floor(largestPossibleRadius);
-		scale.setCenterPoint(0, 0, 0, 0);
+		scale.setCenterPoint(0, 0, paddingTop, 0);
 	}
 
 	function getTextAlignForAngle(angle) {
@@ -13614,19 +13629,10 @@ module.exports = function(Chart) {
 			return +this.getRightValue(this.chart.data.datasets[datasetIndex].data[index]);
 		},
 		fit: function() {
-			var me = this;
-			var opts = me.options;
-			var tickOpts = opts.ticks;
-			var tickFontSize;
-
-			if (opts.pointLabels.display) {
-				fitWithPointLabels(me);
+			if (this.options.pointLabels.display) {
+				fitWithPointLabels(this);
 			} else {
-				fit(me);
-			}
-			if (tickOpts.display && opts.display) {
-				tickFontSize = helpers.valueOrDefault(tickOpts.fontSize, globalDefaults.defaultFontSize);
-				me.paddingTop = Math.max(me.drawingArea + tickFontSize / 2 - Math.floor(me.height / 2), 0);
+				fit(this);
 			}
 		},
 		/**
