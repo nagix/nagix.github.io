@@ -1667,47 +1667,39 @@ module.exports = {
 /**
  * @namespace Chart
  */
-var Chart = require(30)();
+var Chart = require(23)();
 
-Chart.helpers = require(46);
+Chart.helpers = require(39);
 
 // @todo dispatch these helpers into appropriated helpers/helpers.* file and write unit tests!
-require(28)(Chart);
+require(21)(Chart);
 
-Chart.Animation = require(22);
-Chart.animationService = require(23);
-Chart.defaults = require(26);
-Chart.Element = require(27);
-Chart.elements = require(41);
-Chart.Interaction = require(29);
-Chart.layouts = require(31);
-Chart.platform = require(49);
-Chart.plugins = require(32);
-Chart.Scale = require(33);
-Chart.scaleService = require(34);
-Chart.Ticks = require(35);
-Chart.Tooltip = require(36);
+Chart.Animation = require(15);
+Chart.animationService = require(16);
+Chart.defaults = require(19);
+Chart.Element = require(20);
+Chart.elements = require(34);
+Chart.Interaction = require(22);
+Chart.layouts = require(24);
+Chart.platform = require(42);
+Chart.plugins = require(25);
+Chart.Scale = require(26);
+Chart.scaleService = require(27);
+Chart.Ticks = require(28);
+Chart.Tooltip = require(29);
 
-require(24)(Chart);
-require(25)(Chart);
+require(17)(Chart);
+require(18)(Chart);
 
-require(56)(Chart);
-require(54)(Chart);
-require(55)(Chart);
-require(57)(Chart);
-require(58)(Chart);
-require(59)(Chart);
+require(49)(Chart);
+require(47)(Chart);
+require(48)(Chart);
+require(50)(Chart);
+require(51)(Chart);
+require(52)(Chart);
 
 // Controllers must be loaded after elements
 // See Chart.core.datasetController.dataElementType
-require(15)(Chart);
-require(16)(Chart);
-require(17)(Chart);
-require(18)(Chart);
-require(19)(Chart);
-require(20)(Chart);
-require(21)(Chart);
-
 require(8)(Chart);
 require(9)(Chart);
 require(10)(Chart);
@@ -1717,7 +1709,7 @@ require(13)(Chart);
 require(14)(Chart);
 
 // Loading built-in plugins
-var plugins = require(50);
+var plugins = require(43);
 for (var k in plugins) {
 	if (plugins.hasOwnProperty(k)) {
 		Chart.plugins.register(plugins[k]);
@@ -1782,105 +1774,43 @@ Chart.canvasHelpers = Chart.helpers.canvas;
 /**
  * Provided for backward compatibility, use Chart.layouts instead.
  * @namespace Chart.layoutService
- * @deprecated since version 2.8.0
+ * @deprecated since version 2.7.3
  * @todo remove at version 3
  * @private
  */
 Chart.layoutService = Chart.layouts;
 
-},{"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31,"32":32,"33":33,"34":34,"35":35,"36":36,"41":41,"46":46,"49":49,"50":50,"54":54,"55":55,"56":56,"57":57,"58":58,"59":59,"8":8,"9":9}],8:[function(require,module,exports){
+/**
+ * Provided for backward compatibility, instead we should create a new Chart
+ * by setting the type in the config (`new Chart(id, {type: '{chart-type}'}`).
+ * @deprecated since version 2.8.0
+ * @todo remove at version 3
+ */
+Chart.helpers.each(
+	[
+		'Bar',
+		'Bubble',
+		'Doughnut',
+		'Line',
+		'PolarArea',
+		'Radar',
+		'Scatter'
+	],
+	function(klass) {
+		Chart[klass] = function(ctx, cfg) {
+			return new Chart(ctx, Chart.helpers.merge(cfg || {}, {
+				type: klass.charAt(0).toLowerCase() + klass.slice(1)
+			}));
+		};
+	}
+);
+
+},{"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"34":34,"39":39,"42":42,"43":43,"47":47,"48":48,"49":49,"50":50,"51":51,"52":52,"8":8,"9":9}],8:[function(require,module,exports){
 'use strict';
 
-module.exports = function(Chart) {
-
-	Chart.Bar = function(context, config) {
-		config.type = 'bar';
-
-		return new Chart(context, config);
-	};
-
-};
-
-},{}],9:[function(require,module,exports){
-'use strict';
-
-module.exports = function(Chart) {
-
-	Chart.Bubble = function(context, config) {
-		config.type = 'bubble';
-		return new Chart(context, config);
-	};
-
-};
-
-},{}],10:[function(require,module,exports){
-'use strict';
-
-module.exports = function(Chart) {
-
-	Chart.Doughnut = function(context, config) {
-		config.type = 'doughnut';
-
-		return new Chart(context, config);
-	};
-
-};
-
-},{}],11:[function(require,module,exports){
-'use strict';
-
-module.exports = function(Chart) {
-
-	Chart.Line = function(context, config) {
-		config.type = 'line';
-
-		return new Chart(context, config);
-	};
-
-};
-
-},{}],12:[function(require,module,exports){
-'use strict';
-
-module.exports = function(Chart) {
-
-	Chart.PolarArea = function(context, config) {
-		config.type = 'polarArea';
-
-		return new Chart(context, config);
-	};
-
-};
-
-},{}],13:[function(require,module,exports){
-'use strict';
-
-module.exports = function(Chart) {
-
-	Chart.Radar = function(context, config) {
-		config.type = 'radar';
-
-		return new Chart(context, config);
-	};
-
-};
-
-},{}],14:[function(require,module,exports){
-'use strict';
-
-module.exports = function(Chart) {
-	Chart.Scatter = function(context, config) {
-		config.type = 'scatter';
-		return new Chart(context, config);
-	};
-};
-
-},{}],15:[function(require,module,exports){
-'use strict';
-
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('bar', {
 	hover: {
@@ -2407,12 +2337,12 @@ module.exports = function(Chart) {
 	});
 };
 
-},{"26":26,"41":41,"46":46}],16:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],9:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('bubble', {
 	hover: {
@@ -2585,12 +2515,12 @@ module.exports = function(Chart) {
 	});
 };
 
-},{"26":26,"41":41,"46":46}],17:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],10:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('doughnut', {
 	animation: {
@@ -2737,7 +2667,6 @@ module.exports = function(Chart) {
 			var chart = me.chart;
 			var chartArea = chart.chartArea;
 			var opts = chart.options;
-			var arcOpts = opts.elements.arc;
 			var availableWidth = chartArea.right - chartArea.left;
 			var availableHeight = chartArea.bottom - chartArea.top;
 			var minSize = Math.min(availableWidth, availableHeight);
@@ -2765,10 +2694,8 @@ module.exports = function(Chart) {
 				offset = {x: (max.x + min.x) * -0.5, y: (max.y + min.y) * -0.5};
 			}
 
-			// This is no longer used, but left for backward compatibility
-			chart.borderWidth = me.getMaxBorderWidth(meta.data);
-
-			chart.outerRadius = Math.max(minSize / 2, 0);
+			chart.borderWidth = me.getMaxBorderWidth();
+			chart.outerRadius = Math.max((minSize - chart.borderWidth) / 2, 0);
 			chart.innerRadius = Math.max(cutoutPercentage ? (chart.outerRadius / 100) * (cutoutPercentage) : 0, 0);
 			chart.radiusLength = (chart.outerRadius - chart.innerRadius) / chart.getVisibleDatasetCount();
 			chart.offsetX = offset.x * chart.outerRadius;
@@ -2827,6 +2754,7 @@ module.exports = function(Chart) {
 			model.backgroundColor = custom.backgroundColor ? custom.backgroundColor : valueOrDefault(dataset.backgroundColor, index, elementOpts.backgroundColor);
 			model.borderColor = custom.borderColor ? custom.borderColor : valueOrDefault(dataset.borderColor, index, elementOpts.borderColor);
 			model.borderWidth = custom.borderWidth ? custom.borderWidth : valueOrDefault(dataset.borderWidth, index, elementOpts.borderWidth);
+			model.borderAlign = custom.borderAlign ? custom.borderAlign : valueOrDefault(dataset.borderAlign, index, elementOpts.borderAlign);
 
 			// Set correct angles if not resetting
 			if (!reset || !animationOpts.animateRotate) {
@@ -2872,30 +2800,53 @@ module.exports = function(Chart) {
 
 		// gets the max border or hover width to properly scale pie charts
 		getMaxBorderWidth: function(arcs) {
+			var me = this;
 			var max = 0;
-			var index = this.index;
-			var length = arcs.length;
-			var borderWidth;
-			var hoverWidth;
+			var index = me.index;
+			var chart = me.chart;
+			var valueAtIndexOrDefault = helpers.valueAtIndexOrDefault;
+			var elementOpts = chart.options.elements.arc;
+			var i, ilen, dataset, custom, borderAlign, borderWidth, hoverWidth;
 
-			for (var i = 0; i < length; i++) {
-				borderWidth = arcs[i]._model ? arcs[i]._model.borderWidth : 0;
-				hoverWidth = arcs[i]._chart ? arcs[i]._chart.config.data.datasets[index].hoverBorderWidth : 0;
+			if (!arcs) {
+				// Find the outmost visible dataset
+				for (i = 0, ilen = chart.data.datasets.length; i < ilen; ++i) {
+					if (chart.isDatasetVisible(i)) {
+						arcs = chart.getDatasetMeta(i).data;
+						index = i;
+						break;
+					}
+				}
+			}
 
-				max = borderWidth > max ? borderWidth : max;
-				max = hoverWidth > max ? hoverWidth : max;
+			if (!arcs) {
+				return 0;
+			}
+
+			dataset = chart.data.datasets[index];
+
+			for (i = 0, ilen = arcs.length; i < ilen; ++i) {
+				custom = arcs[i].custom || {};
+				borderAlign = custom.borderAlign ? custom.borderAlign : valueAtIndexOrDefault(dataset.borderAlign, i, elementOpts.borderAlign);
+				if (borderAlign !== 'inner') {
+					borderWidth = custom.borderWidth ? custom.borderWidth : valueAtIndexOrDefault(dataset.borderWidth, i, elementOpts.borderWidth);
+					hoverWidth = custom.hoverBorderWidth ? custom.hoverBorderWidth : valueAtIndexOrDefault(dataset.hoverBorderWidth, i, borderWidth);
+
+					max = borderWidth > max ? borderWidth : max;
+					max = hoverWidth > max ? hoverWidth : max;
+				}
 			}
 			return max;
 		}
 	});
 };
 
-},{"26":26,"41":41,"46":46}],18:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],11:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('line', {
 	showLines: true,
@@ -3236,12 +3187,12 @@ module.exports = function(Chart) {
 	});
 };
 
-},{"26":26,"41":41,"46":46}],19:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],12:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('polarArea', {
 	scale: {
@@ -3388,7 +3339,6 @@ module.exports = function(Chart) {
 			var chart = me.chart;
 			var chartArea = chart.chartArea;
 			var opts = chart.options;
-			var arcOpts = opts.elements.arc;
 			var minSize = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
 
 			chart.outerRadius = Math.max(minSize / 2, 0);
@@ -3446,6 +3396,7 @@ module.exports = function(Chart) {
 			model.backgroundColor = custom.backgroundColor ? custom.backgroundColor : valueOrDefault(dataset.backgroundColor, index, elementOpts.backgroundColor);
 			model.borderColor = custom.borderColor ? custom.borderColor : valueOrDefault(dataset.borderColor, index, elementOpts.borderColor);
 			model.borderWidth = custom.borderWidth ? custom.borderWidth : valueOrDefault(dataset.borderWidth, index, elementOpts.borderWidth);
+			model.borderAlign = custom.borderAlign ? custom.borderAlign : valueOrDefault(dataset.borderAlign, index, elementOpts.borderAlign);
 
 			arc.pivot();
 		},
@@ -3493,12 +3444,12 @@ module.exports = function(Chart) {
 	});
 };
 
-},{"26":26,"41":41,"46":46}],20:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],13:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('radar', {
 	scale: {
@@ -3667,10 +3618,10 @@ module.exports = function(Chart) {
 	});
 };
 
-},{"26":26,"41":41,"46":46}],21:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],14:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
+var defaults = require(19);
 
 defaults._set('scatter', {
 	hover: {
@@ -3711,10 +3662,10 @@ module.exports = function(Chart) {
 
 };
 
-},{"26":26}],22:[function(require,module,exports){
+},{"19":19}],15:[function(require,module,exports){
 'use strict';
 
-var Element = require(27);
+var Element = require(20);
 
 var exports = module.exports = Element.extend({
 	chart: null, // the animation associated chart instance
@@ -3756,12 +3707,12 @@ Object.defineProperty(exports.prototype, 'chartInstance', {
 	}
 });
 
-},{"27":27}],23:[function(require,module,exports){
+},{"20":20}],16:[function(require,module,exports){
 /* global window: false */
 'use strict';
 
-var defaults = require(26);
-var helpers = require(46);
+var defaults = require(19);
+var helpers = require(39);
 
 defaults._set('global', {
 	animation: {
@@ -3887,19 +3838,19 @@ module.exports = {
 	}
 };
 
-},{"26":26,"46":46}],24:[function(require,module,exports){
+},{"19":19,"39":39}],17:[function(require,module,exports){
 'use strict';
 
-var Animation = require(22);
-var animations = require(23);
-var defaults = require(26);
-var helpers = require(46);
-var Interaction = require(29);
-var layouts = require(31);
-var platform = require(49);
-var plugins = require(32);
-var scaleService = require(34);
-var Tooltip = require(36);
+var Animation = require(15);
+var animations = require(16);
+var defaults = require(19);
+var helpers = require(39);
+var Interaction = require(22);
+var layouts = require(24);
+var platform = require(42);
+var plugins = require(25);
+var scaleService = require(27);
+var Tooltip = require(29);
 
 module.exports = function(Chart) {
 
@@ -4849,10 +4800,10 @@ module.exports = function(Chart) {
 	Chart.Controller = Chart;
 };
 
-},{"22":22,"23":23,"26":26,"29":29,"31":31,"32":32,"34":34,"36":36,"46":46,"49":49}],25:[function(require,module,exports){
+},{"15":15,"16":16,"19":19,"22":22,"24":24,"25":25,"27":27,"29":29,"39":39,"42":42}],18:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
+var helpers = require(39);
 
 module.exports = function(Chart) {
 
@@ -5180,10 +5131,10 @@ module.exports = function(Chart) {
 	Chart.DatasetController.extend = helpers.inherits;
 };
 
-},{"46":46}],26:[function(require,module,exports){
+},{"39":39}],19:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
+var helpers = require(39);
 
 module.exports = {
 	/**
@@ -5194,11 +5145,11 @@ module.exports = {
 	}
 };
 
-},{"46":46}],27:[function(require,module,exports){
+},{"39":39}],20:[function(require,module,exports){
 'use strict';
 
 var color = require(3);
-var helpers = require(46);
+var helpers = require(39);
 
 function interpolate(start, view, model, ease) {
 	var keys = Object.keys(model);
@@ -5311,15 +5262,15 @@ Element.extend = helpers.inherits;
 
 module.exports = Element;
 
-},{"3":3,"46":46}],28:[function(require,module,exports){
+},{"3":3,"39":39}],21:[function(require,module,exports){
 /* global window: false */
 /* global document: false */
 'use strict';
 
 var color = require(3);
-var defaults = require(26);
-var helpers = require(46);
-var scaleService = require(34);
+var defaults = require(19);
+var helpers = require(39);
+var scaleService = require(27);
 
 module.exports = function() {
 
@@ -5813,14 +5764,14 @@ module.exports = function() {
 	helpers._calculatePadding = function(container, padding, parentDimension) {
 		padding = helpers.getStyle(container, padding);
 
-		return padding.indexOf('%') > -1 ? parentDimension / parseInt(padding, 10) : parseInt(padding, 10);
+		return padding.indexOf('%') > -1 ? parentDimension * parseInt(padding, 10) / 100 : parseInt(padding, 10);
 	};
 	/**
 	 * @private
 	 */
 	helpers._getParentNode = function(domNode) {
 		var parent = domNode.parentNode;
-		if (parent && parent.host) {
+		if (parent && parent.toString() === '[object ShadowRoot]') {
 			parent = parent.host;
 		}
 		return parent;
@@ -5961,16 +5912,16 @@ module.exports = function() {
 
 	helpers.getHoverColor = function(colorValue) {
 		/* global CanvasPattern */
-		return (colorValue instanceof CanvasPattern) ?
+		return (colorValue instanceof CanvasPattern || colorValue instanceof CanvasGradient) ?
 			colorValue :
 			helpers.color(colorValue).saturate(0.5).darken(0.1).rgbString();
 	};
 };
 
-},{"26":26,"3":3,"34":34,"46":46}],29:[function(require,module,exports){
+},{"19":19,"27":27,"3":3,"39":39}],22:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
+var helpers = require(39);
 
 /**
  * Helper function to get relative position for an event
@@ -6213,26 +6164,7 @@ module.exports = {
 			var position = getRelativePosition(e, chart);
 			options.axis = options.axis || 'xy';
 			var distanceMetric = getDistanceMetricForAxis(options.axis);
-			var nearestItems = getNearestItems(chart, position, options.intersect, distanceMetric);
-
-			// We have multiple items at the same distance from the event. Now sort by smallest
-			if (nearestItems.length > 1) {
-				nearestItems.sort(function(a, b) {
-					var sizeA = a.getArea();
-					var sizeB = b.getArea();
-					var ret = sizeA - sizeB;
-
-					if (ret === 0) {
-						// if equal sort by dataset index
-						ret = a._datasetIndex - b._datasetIndex;
-					}
-
-					return ret;
-				});
-			}
-
-			// Return only 1 item
-			return nearestItems.slice(0, 1);
+			return getNearestItems(chart, position, options.intersect, distanceMetric);
 		},
 
 		/**
@@ -6299,10 +6231,10 @@ module.exports = {
 	}
 };
 
-},{"46":46}],30:[function(require,module,exports){
+},{"39":39}],23:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
+var defaults = require(19);
 
 defaults._set('global', {
 	responsive: true,
@@ -6350,10 +6282,10 @@ module.exports = function() {
 	return Chart;
 };
 
-},{"26":26}],31:[function(require,module,exports){
+},{"19":19}],24:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
+var helpers = require(39);
 
 function filterByPosition(array, position) {
 	return helpers.where(array, function(v) {
@@ -6771,11 +6703,11 @@ module.exports = {
 	}
 };
 
-},{"46":46}],32:[function(require,module,exports){
+},{"39":39}],25:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var helpers = require(46);
+var defaults = require(19);
+var helpers = require(39);
 
 defaults._set('global', {
 	plugins: {}
@@ -7155,13 +7087,13 @@ module.exports = {
  * @param {Object} options - The plugin options.
  */
 
-},{"26":26,"46":46}],33:[function(require,module,exports){
+},{"19":19,"39":39}],26:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
-var Ticks = require(35);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
+var Ticks = require(28);
 
 defaults._set('scale', {
 	display: true,
@@ -7866,7 +7798,7 @@ module.exports = Element.extend({
 
 		var itemsToDraw = [];
 
-		var axisWidth = me.options.gridLines.lineWidth;
+		var axisWidth = helpers.valueAtIndexOrDefault(me.options.gridLines.lineWidth, 0);
 		var xTickStart = options.position === 'right' ? me.left : me.right - axisWidth - tl;
 		var xTickEnd = options.position === 'right' ? me.left + tl : me.right;
 		var yTickStart = options.position === 'bottom' ? me.top + axisWidth : me.bottom - tl - axisWidth;
@@ -7886,13 +7818,13 @@ module.exports = Element.extend({
 				// Draw the first index specially
 				lineWidth = gridLines.zeroLineWidth;
 				lineColor = gridLines.zeroLineColor;
-				borderDash = gridLines.zeroLineBorderDash;
-				borderDashOffset = gridLines.zeroLineBorderDashOffset;
+				borderDash = gridLines.zeroLineBorderDash || [];
+				borderDashOffset = gridLines.zeroLineBorderDashOffset || 0.0;
 			} else {
 				lineWidth = helpers.valueAtIndexOrDefault(gridLines.lineWidth, index);
 				lineColor = helpers.valueAtIndexOrDefault(gridLines.color, index);
-				borderDash = helpers.valueOrDefault(gridLines.borderDash, globalDefaults.borderDash);
-				borderDashOffset = helpers.valueOrDefault(gridLines.borderDashOffset, globalDefaults.borderDashOffset);
+				borderDash = gridLines.borderDash || [];
+				borderDashOffset = gridLines.borderDashOffset || 0.0;
 			}
 
 			// Common properties
@@ -7983,10 +7915,13 @@ module.exports = Element.extend({
 
 		// Draw all of the tick labels, tick marks, and grid lines at the correct places
 		helpers.each(itemsToDraw, function(itemToDraw) {
-			if (gridLines.display) {
+			var glWidth = itemToDraw.glWidth;
+			var glColor = itemToDraw.glColor;
+
+			if (gridLines.display && glWidth && glColor) {
 				context.save();
-				context.lineWidth = itemToDraw.glWidth;
-				context.strokeStyle = itemToDraw.glColor;
+				context.lineWidth = glWidth;
+				context.strokeStyle = glColor;
 				if (context.setLineDash) {
 					context.setLineDash(itemToDraw.glBorderDash);
 					context.lineDashOffset = itemToDraw.glBorderDashOffset;
@@ -8097,12 +8032,12 @@ module.exports = Element.extend({
 	}
 });
 
-},{"26":26,"27":27,"35":35,"46":46}],34:[function(require,module,exports){
+},{"19":19,"20":20,"28":28,"39":39}],27:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var helpers = require(46);
-var layouts = require(31);
+var defaults = require(19);
+var helpers = require(39);
+var layouts = require(24);
 
 module.exports = {
 	// Scale registration object. Extensions can register new scale types (such as log or DB scales) and then
@@ -8142,10 +8077,10 @@ module.exports = {
 	}
 };
 
-},{"26":26,"31":31,"46":46}],35:[function(require,module,exports){
+},{"19":19,"24":24,"39":39}],28:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
+var helpers = require(39);
 
 /**
  * Namespace to hold static tick generation functions
@@ -8220,12 +8155,12 @@ module.exports = {
 	}
 };
 
-},{"46":46}],36:[function(require,module,exports){
+},{"39":39}],29:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
 
 defaults._set('global', {
 	tooltips: {
@@ -8390,14 +8325,6 @@ var positioners = {
 		};
 	}
 };
-
-/**
- * Helper method to merge the opacity into a color
- */
-function mergeOpacity(colorString, opacity) {
-	var color = helpers.color(colorString);
-	return color.alpha(opacity * color.alpha()).rgbaString();
-}
 
 // Helper to push or concat based on if the 2nd parameter is an array or not
 function pushOrConcat(base, toPush) {
@@ -8957,7 +8884,7 @@ var exports = module.exports = Element.extend({
 		return {x1: x1, x2: x2, x3: x3, y1: y1, y2: y2, y3: y3};
 	},
 
-	drawTitle: function(pt, vm, ctx, opacity) {
+	drawTitle: function(pt, vm, ctx) {
 		var title = vm.title;
 
 		if (title.length) {
@@ -8967,7 +8894,7 @@ var exports = module.exports = Element.extend({
 			var titleFontSize = vm.titleFontSize;
 			var titleSpacing = vm.titleSpacing;
 
-			ctx.fillStyle = mergeOpacity(vm.titleFontColor, opacity);
+			ctx.fillStyle = vm.titleFontColor;
 			ctx.font = helpers.fontString(titleFontSize, vm._titleFontStyle, vm._titleFontFamily);
 
 			var i, len;
@@ -8982,7 +8909,7 @@ var exports = module.exports = Element.extend({
 		}
 	},
 
-	drawBody: function(pt, vm, ctx, opacity) {
+	drawBody: function(pt, vm, ctx) {
 		var bodyFontSize = vm.bodyFontSize;
 		var bodySpacing = vm.bodySpacing;
 		var body = vm.body;
@@ -8999,7 +8926,7 @@ var exports = module.exports = Element.extend({
 		};
 
 		// Before body lines
-		ctx.fillStyle = mergeOpacity(vm.bodyFontColor, opacity);
+		ctx.fillStyle = vm.bodyFontColor;
 		helpers.each(vm.beforeBody, fillLineOfText);
 
 		var drawColorBoxes = vm.displayColors;
@@ -9007,7 +8934,7 @@ var exports = module.exports = Element.extend({
 
 		// Draw body lines now
 		helpers.each(body, function(bodyItem, i) {
-			var textColor = mergeOpacity(vm.labelTextColors[i], opacity);
+			var textColor = vm.labelTextColors[i];
 			ctx.fillStyle = textColor;
 			helpers.each(bodyItem.before, fillLineOfText);
 
@@ -9015,16 +8942,16 @@ var exports = module.exports = Element.extend({
 				// Draw Legend-like boxes if needed
 				if (drawColorBoxes) {
 					// Fill a white rect so that colours merge nicely if the opacity is < 1
-					ctx.fillStyle = mergeOpacity(vm.legendColorBackground, opacity);
+					ctx.fillStyle = vm.legendColorBackground;
 					ctx.fillRect(pt.x, pt.y, bodyFontSize, bodyFontSize);
 
 					// Border
 					ctx.lineWidth = 1;
-					ctx.strokeStyle = mergeOpacity(vm.labelColors[i].borderColor, opacity);
+					ctx.strokeStyle = vm.labelColors[i].borderColor;
 					ctx.strokeRect(pt.x, pt.y, bodyFontSize, bodyFontSize);
 
 					// Inner square
-					ctx.fillStyle = mergeOpacity(vm.labelColors[i].backgroundColor, opacity);
+					ctx.fillStyle = vm.labelColors[i].backgroundColor;
 					ctx.fillRect(pt.x + 1, pt.y + 1, bodyFontSize - 2, bodyFontSize - 2);
 					ctx.fillStyle = textColor;
 				}
@@ -9043,7 +8970,7 @@ var exports = module.exports = Element.extend({
 		pt.y -= bodySpacing; // Remove last body spacing
 	},
 
-	drawFooter: function(pt, vm, ctx, opacity) {
+	drawFooter: function(pt, vm, ctx) {
 		var footer = vm.footer;
 
 		if (footer.length) {
@@ -9052,7 +8979,7 @@ var exports = module.exports = Element.extend({
 			ctx.textAlign = vm._footerAlign;
 			ctx.textBaseline = 'top';
 
-			ctx.fillStyle = mergeOpacity(vm.footerFontColor, opacity);
+			ctx.fillStyle = vm.footerFontColor;
 			ctx.font = helpers.fontString(vm.footerFontSize, vm._footerFontStyle, vm._footerFontFamily);
 
 			helpers.each(footer, function(line) {
@@ -9062,9 +8989,9 @@ var exports = module.exports = Element.extend({
 		}
 	},
 
-	drawBackground: function(pt, vm, ctx, tooltipSize, opacity) {
-		ctx.fillStyle = mergeOpacity(vm.backgroundColor, opacity);
-		ctx.strokeStyle = mergeOpacity(vm.borderColor, opacity);
+	drawBackground: function(pt, vm, ctx, tooltipSize) {
+		ctx.fillStyle = vm.backgroundColor;
+		ctx.strokeStyle = vm.borderColor;
 		ctx.lineWidth = vm.borderWidth;
 		var xAlign = vm.xAlign;
 		var yAlign = vm.yAlign;
@@ -9129,21 +9056,26 @@ var exports = module.exports = Element.extend({
 		var hasTooltipContent = vm.title.length || vm.beforeBody.length || vm.body.length || vm.afterBody.length || vm.footer.length;
 
 		if (this._options.enabled && hasTooltipContent) {
+			ctx.save();
+			ctx.globalAlpha = opacity;
+
 			// Draw Background
-			this.drawBackground(pt, vm, ctx, tooltipSize, opacity);
+			this.drawBackground(pt, vm, ctx, tooltipSize);
 
 			// Draw Title, Body, and Footer
 			pt.x += vm.xPadding;
 			pt.y += vm.yPadding;
 
 			// Titles
-			this.drawTitle(pt, vm, ctx, opacity);
+			this.drawTitle(pt, vm, ctx);
 
 			// Body
-			this.drawBody(pt, vm, ctx, opacity);
+			this.drawBody(pt, vm, ctx);
 
 			// Footer
-			this.drawFooter(pt, vm, ctx, opacity);
+			this.drawFooter(pt, vm, ctx);
+
+			ctx.restore();
 		}
 	},
 
@@ -9195,19 +9127,20 @@ var exports = module.exports = Element.extend({
 exports.positioners = positioners;
 
 
-},{"26":26,"27":27,"46":46}],37:[function(require,module,exports){
+},{"19":19,"20":20,"39":39}],30:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
 
 defaults._set('global', {
 	elements: {
 		arc: {
 			backgroundColor: defaults.global.defaultColor,
 			borderColor: '#fff',
-			borderWidth: 1
+			borderWidth: 2,
+			borderAlign: 'center'
 		}
 	}
 });
@@ -9283,50 +9216,61 @@ module.exports = Element.extend({
 		var vm = this._view;
 		var sA = vm.startAngle;
 		var eA = vm.endAngle;
-		var cA = eA - sA;
-		var outerRadius = vm.outerRadius;
-		var innerRadius = vm.innerRadius;
-		var width = outerRadius - innerRadius;
-		var minBorderWidth = outerRadius / (1 / Math.sin(Math.min(cA / 2, Math.PI / 2)) + 1);
-		var borderWidth = Math.min(Math.min(vm.borderWidth, minBorderWidth), width / 2) || 0;
-		var halfStroke = borderWidth / 2;
-		var outerHalfStrokeAngle = Math.atan2(halfStroke, Math.sqrt(outerRadius * (outerRadius - halfStroke * 2)));
-		var innerHalfStrokeAngle = Math.atan2(halfStroke, Math.sqrt(innerRadius * (innerRadius + halfStroke * 2)));
-		var r;
+		var pixelMargin = (vm.borderAlign === 'inner') ? 0.33 : 0;
+		var angleMargin;
+
+		ctx.save();
 
 		ctx.beginPath();
-
-		ctx.arc(vm.x, vm.y, outerRadius - halfStroke, sA + outerHalfStrokeAngle, eA - outerHalfStrokeAngle);
-		if (innerRadius > 0 || cA > Math.PI) {
-			innerHalfStrokeAngle = Math.min(innerHalfStrokeAngle, cA / 2 - 0.0001);
-			ctx.arc(vm.x, vm.y, innerRadius + halfStroke, eA - innerHalfStrokeAngle, sA + innerHalfStrokeAngle, true);
-		} else {
-			r = halfStroke / Math.sin(cA / 2);
-			ctx.lineTo(vm.x + r * Math.cos((sA + eA) / 2), vm.y + r * Math.sin((sA + eA) / 2));
-		}
-
+		ctx.arc(vm.x, vm.y, vm.outerRadius - pixelMargin, sA, eA);
+		ctx.arc(vm.x, vm.y, vm.innerRadius, eA, sA, true);
 		ctx.closePath();
-		ctx.strokeStyle = vm.borderColor;
-		ctx.lineWidth = borderWidth;
 
 		ctx.fillStyle = vm.backgroundColor;
-
 		ctx.fill();
-		ctx.lineJoin = 'miter';
-		ctx.miterLimit = 1E+38;
 
-		if (borderWidth) {
+		if (vm.borderWidth) {
+			if (vm.borderAlign === 'inner') {
+				// Draw an inner border by cliping the arc and drawing a double-width border
+				// Enlarge the clipping arc by 0.33 pixels to eliminate glitches between borders
+				ctx.beginPath();
+				angleMargin = pixelMargin / vm.outerRadius;
+				ctx.arc(vm.x, vm.y, vm.outerRadius, sA - angleMargin, eA + angleMargin);
+				if (vm.innerRadius > pixelMargin) {
+					angleMargin = pixelMargin / vm.innerRadius;
+					ctx.arc(vm.x, vm.y, vm.innerRadius - pixelMargin, eA + angleMargin, sA - angleMargin, true);
+				} else {
+					ctx.arc(vm.x, vm.y, pixelMargin, eA + Math.PI / 2, sA - Math.PI / 2);
+				}
+				ctx.closePath();
+				ctx.clip();
+
+				ctx.beginPath();
+				ctx.arc(vm.x, vm.y, vm.outerRadius, sA, eA);
+				ctx.arc(vm.x, vm.y, vm.innerRadius, eA, sA, true);
+				ctx.closePath();
+
+				ctx.lineWidth = vm.borderWidth * 2;
+				ctx.lineJoin = 'round';
+			} else {
+				ctx.lineWidth = vm.borderWidth;
+				ctx.lineJoin = 'bevel';
+			}
+
+			ctx.strokeStyle = vm.borderColor;
 			ctx.stroke();
 		}
+
+		ctx.restore();
 	}
 });
 
-},{"26":26,"27":27,"46":46}],38:[function(require,module,exports){
+},{"19":19,"20":20,"39":39}],31:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
 
 var globalDefaults = defaults.global;
 
@@ -9414,12 +9358,12 @@ module.exports = Element.extend({
 	}
 });
 
-},{"26":26,"27":27,"46":46}],39:[function(require,module,exports){
+},{"19":19,"20":20,"39":39}],32:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
 
 var defaultColor = defaults.global.defaultColor;
 
@@ -9505,11 +9449,11 @@ module.exports = Element.extend({
 	}
 });
 
-},{"26":26,"27":27,"46":46}],40:[function(require,module,exports){
+},{"19":19,"20":20,"39":39}],33:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
+var defaults = require(19);
+var Element = require(20);
 
 defaults._set('global', {
 	elements: {
@@ -9724,19 +9668,26 @@ module.exports = Element.extend({
 	}
 });
 
-},{"26":26,"27":27}],41:[function(require,module,exports){
+},{"19":19,"20":20}],34:[function(require,module,exports){
 'use strict';
 
 module.exports = {};
-module.exports.Arc = require(37);
-module.exports.Line = require(38);
-module.exports.Point = require(39);
-module.exports.Rectangle = require(40);
+module.exports.Arc = require(30);
+module.exports.Line = require(31);
+module.exports.Point = require(32);
+module.exports.Rectangle = require(33);
 
-},{"37":37,"38":38,"39":39,"40":40}],42:[function(require,module,exports){
+},{"30":30,"31":31,"32":32,"33":33}],35:[function(require,module,exports){
 'use strict';
 
-var helpers = require(43);
+var helpers = require(36);
+
+var PI = Math.PI;
+var RAD_PER_DEG = PI / 180;
+var DOUBLE_PI = PI * 2;
+var HALF_PI = PI / 2;
+var QUARTER_PI = PI / 4;
+var TWO_THIRDS_PI = PI * 2 / 3;
 
 /**
  * @namespace Chart.helpers.canvas
@@ -9763,20 +9714,28 @@ var exports = module.exports = {
 	 */
 	roundedRect: function(ctx, x, y, width, height, radius) {
 		if (radius) {
-			// NOTE(SB) `epsilon` helps to prevent minor artifacts appearing
-			// on Chrome when `r` is exactly half the height or the width.
-			var epsilon = 0.0000001;
-			var r = Math.min(radius, (height / 2) - epsilon, (width / 2) - epsilon);
+			var r = Math.min(radius, height / 2, width / 2);
+			var left = x + r;
+			var top = y + r;
+			var right = x + width - r;
+			var bottom = y + height - r;
 
-			ctx.moveTo(x + r, y);
-			ctx.lineTo(x + width - r, y);
-			ctx.arcTo(x + width, y, x + width, y + r, r);
-			ctx.lineTo(x + width, y + height - r);
-			ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
-			ctx.lineTo(x + r, y + height);
-			ctx.arcTo(x, y + height, x, y + height - r, r);
-			ctx.lineTo(x, y + r);
-			ctx.arcTo(x, y, x + r, y, r);
+			ctx.moveTo(x, top);
+			if (left < right && top < bottom) {
+				ctx.arc(left, top, r, -PI, -HALF_PI);
+				ctx.arc(right, top, r, -HALF_PI, 0);
+				ctx.arc(right, bottom, r, 0, HALF_PI);
+				ctx.arc(left, bottom, r, HALF_PI, PI);
+			} else if (left < right) {
+				ctx.moveTo(left, y);
+				ctx.arc(right, top, r, -HALF_PI, HALF_PI);
+				ctx.arc(left, top, r, HALF_PI, PI + HALF_PI);
+			} else if (top < bottom) {
+				ctx.arc(left, top, r, -PI, 0);
+				ctx.arc(left, bottom, r, 0, PI);
+			} else {
+				ctx.arc(left, top, r, -PI, PI);
+			}
 			ctx.closePath();
 			ctx.moveTo(x, y);
 		} else {
@@ -9785,8 +9744,8 @@ var exports = module.exports = {
 	},
 
 	drawPoint: function(ctx, style, radius, x, y, rotation) {
-		var type, edgeLength, xOffset, yOffset, height, size;
-		rotation = rotation || 0;
+		var type, xOffset, yOffset, size, cornerRadius;
+		var rad = (rotation || 0) * RAD_PER_DEG;
 
 		if (style && typeof style === 'object') {
 			type = style.toString();
@@ -9800,88 +9759,97 @@ var exports = module.exports = {
 			return;
 		}
 
-		ctx.save();
-		ctx.translate(x, y);
-		ctx.rotate(rotation * Math.PI / 180);
 		ctx.beginPath();
 
 		switch (style) {
 		// Default includes circle
 		default:
-			ctx.arc(0, 0, radius, 0, Math.PI * 2);
+			ctx.arc(x, y, radius, 0, DOUBLE_PI);
 			ctx.closePath();
 			break;
 		case 'triangle':
-			edgeLength = 3 * radius / Math.sqrt(3);
-			height = edgeLength * Math.sqrt(3) / 2;
-			ctx.moveTo(-edgeLength / 2, height / 3);
-			ctx.lineTo(edgeLength / 2, height / 3);
-			ctx.lineTo(0, -2 * height / 3);
+			ctx.moveTo(x + Math.sin(rad) * radius, y - Math.cos(rad) * radius);
+			rad += TWO_THIRDS_PI;
+			ctx.lineTo(x + Math.sin(rad) * radius, y - Math.cos(rad) * radius);
+			rad += TWO_THIRDS_PI;
+			ctx.lineTo(x + Math.sin(rad) * radius, y - Math.cos(rad) * radius);
+			ctx.closePath();
+			break;
+		case 'rectRounded':
+			// NOTE: the rounded rect implementation changed to use `arc` instead of
+			// `quadraticCurveTo` since it generates better results when rect is
+			// almost a circle. 0.516 (instead of 0.5) produces results with visually
+			// closer proportion to the previous impl and it is inscribed in the
+			// circle with `radius`. For more details, see the following PRs:
+			// https://github.com/chartjs/Chart.js/issues/5597
+			// https://github.com/chartjs/Chart.js/issues/5858
+			cornerRadius = radius * 0.516;
+			size = radius - cornerRadius;
+			xOffset = Math.cos(rad + QUARTER_PI) * size;
+			yOffset = Math.sin(rad + QUARTER_PI) * size;
+			ctx.arc(x - xOffset, y - yOffset, cornerRadius, rad - PI, rad - HALF_PI);
+			ctx.arc(x + yOffset, y - xOffset, cornerRadius, rad - HALF_PI, rad);
+			ctx.arc(x + xOffset, y + yOffset, cornerRadius, rad, rad + HALF_PI);
+			ctx.arc(x - yOffset, y + xOffset, cornerRadius, rad + HALF_PI, rad + PI);
 			ctx.closePath();
 			break;
 		case 'rect':
-			size = 1 / Math.SQRT2 * radius;
-			ctx.rect(-size, -size, 2 * size, 2 * size);
-			break;
-		case 'rectRounded':
-			var offset = radius / Math.SQRT2;
-			var leftX = -offset;
-			var topY = -offset;
-			var sideSize = Math.SQRT2 * radius;
-
-			// NOTE(SB) the rounded rect implementation changed to use `arcTo`
-			// instead of `quadraticCurveTo` since it generates better results
-			// when rect is almost a circle. 0.425 (instead of 0.5) produces
-			// results visually closer to the previous impl.
-			this.roundedRect(ctx, leftX, topY, sideSize, sideSize, radius * 0.425);
-			break;
+			if (!rotation) {
+				size = Math.SQRT1_2 * radius;
+				ctx.rect(x - size, y - size, 2 * size, 2 * size);
+				break;
+			}
+			rad += QUARTER_PI;
+			/* falls through */
 		case 'rectRot':
-			size = 1 / Math.SQRT2 * radius;
-			ctx.moveTo(-size, 0);
-			ctx.lineTo(0, size);
-			ctx.lineTo(size, 0);
-			ctx.lineTo(0, -size);
+			xOffset = Math.cos(rad) * radius;
+			yOffset = Math.sin(rad) * radius;
+			ctx.moveTo(x - xOffset, y - yOffset);
+			ctx.lineTo(x + yOffset, y - xOffset);
+			ctx.lineTo(x + xOffset, y + yOffset);
+			ctx.lineTo(x - yOffset, y + xOffset);
 			ctx.closePath();
 			break;
-		case 'cross':
-			ctx.moveTo(0, radius);
-			ctx.lineTo(0, -radius);
-			ctx.moveTo(-radius, 0);
-			ctx.lineTo(radius, 0);
-			break;
 		case 'crossRot':
-			xOffset = Math.cos(Math.PI / 4) * radius;
-			yOffset = Math.sin(Math.PI / 4) * radius;
-			ctx.moveTo(-xOffset, -yOffset);
-			ctx.lineTo(xOffset, yOffset);
-			ctx.moveTo(-xOffset, yOffset);
-			ctx.lineTo(xOffset, -yOffset);
+			rad += QUARTER_PI;
+			/* falls through */
+		case 'cross':
+			xOffset = Math.cos(rad) * radius;
+			yOffset = Math.sin(rad) * radius;
+			ctx.moveTo(x - xOffset, y - yOffset);
+			ctx.lineTo(x + xOffset, y + yOffset);
+			ctx.moveTo(x + yOffset, y - xOffset);
+			ctx.lineTo(x - yOffset, y + xOffset);
 			break;
 		case 'star':
-			ctx.moveTo(0, radius);
-			ctx.lineTo(0, -radius);
-			ctx.moveTo(-radius, 0);
-			ctx.lineTo(radius, 0);
-			xOffset = Math.cos(Math.PI / 4) * radius;
-			yOffset = Math.sin(Math.PI / 4) * radius;
-			ctx.moveTo(-xOffset, -yOffset);
-			ctx.lineTo(xOffset, yOffset);
-			ctx.moveTo(-xOffset, yOffset);
-			ctx.lineTo(xOffset, -yOffset);
+			xOffset = Math.cos(rad) * radius;
+			yOffset = Math.sin(rad) * radius;
+			ctx.moveTo(x - xOffset, y - yOffset);
+			ctx.lineTo(x + xOffset, y + yOffset);
+			ctx.moveTo(x + yOffset, y - xOffset);
+			ctx.lineTo(x - yOffset, y + xOffset);
+			rad += QUARTER_PI;
+			xOffset = Math.cos(rad) * radius;
+			yOffset = Math.sin(rad) * radius;
+			ctx.moveTo(x - xOffset, y - yOffset);
+			ctx.lineTo(x + xOffset, y + yOffset);
+			ctx.moveTo(x + yOffset, y - xOffset);
+			ctx.lineTo(x - yOffset, y + xOffset);
 			break;
 		case 'line':
-			ctx.moveTo(-radius, 0);
-			ctx.lineTo(radius, 0);
+			xOffset = Math.cos(rad) * radius;
+			yOffset = Math.sin(rad) * radius;
+			ctx.moveTo(x - xOffset, y - yOffset);
+			ctx.lineTo(x + xOffset, y + yOffset);
 			break;
 		case 'dash':
-			ctx.moveTo(0, 0);
-			ctx.lineTo(radius, 0);
+			ctx.moveTo(x, y);
+			ctx.lineTo(x + Math.cos(rad) * radius, y + Math.sin(rad) * radius);
 			break;
 		}
 
 		ctx.fill();
 		ctx.stroke();
-		ctx.restore();
 	},
 
 	clipArea: function(ctx, area) {
@@ -9944,7 +9912,7 @@ helpers.drawRoundedRectangle = function(ctx) {
 	exports.roundedRect.apply(exports, arguments);
 };
 
-},{"43":43}],43:[function(require,module,exports){
+},{"36":36}],36:[function(require,module,exports){
 'use strict';
 
 /**
@@ -10294,10 +10262,10 @@ helpers.getValueOrDefault = helpers.valueOrDefault;
  */
 helpers.getValueAtIndexOrDefault = helpers.valueAtIndexOrDefault;
 
-},{}],44:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 'use strict';
 
-var helpers = require(43);
+var helpers = require(36);
 
 /**
  * Easing functions adapted from Robert Penner's easing equations.
@@ -10546,10 +10514,10 @@ module.exports = {
  */
 helpers.easingEffects = effects;
 
-},{"43":43}],45:[function(require,module,exports){
+},{"36":36}],38:[function(require,module,exports){
 'use strict';
 
-var helpers = require(43);
+var helpers = require(36);
 
 /**
  * @alias Chart.helpers.options
@@ -10644,15 +10612,15 @@ module.exports = {
 	}
 };
 
-},{"43":43}],46:[function(require,module,exports){
+},{"36":36}],39:[function(require,module,exports){
 'use strict';
 
-module.exports = require(43);
-module.exports.easing = require(44);
-module.exports.canvas = require(42);
-module.exports.options = require(45);
+module.exports = require(36);
+module.exports.easing = require(37);
+module.exports.canvas = require(35);
+module.exports.options = require(38);
 
-},{"42":42,"43":43,"44":44,"45":45}],47:[function(require,module,exports){
+},{"35":35,"36":36,"37":37,"38":38}],40:[function(require,module,exports){
 /**
  * Platform fallback implementation (minimal).
  * @see https://github.com/chartjs/Chart.js/pull/4591#issuecomment-319575939
@@ -10669,14 +10637,14 @@ module.exports = {
 	}
 };
 
-},{}],48:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /**
  * Chart.Platform implementation for targeting a web browser
  */
 
 'use strict';
 
-var helpers = require(46);
+var helpers = require(39);
 
 var EXPANDO_KEY = '$chartjs';
 var CSS_PREFIX = 'chartjs-';
@@ -10780,6 +10748,7 @@ var supportsEventListenerOptions = (function() {
 	var supports = false;
 	try {
 		var options = Object.defineProperty({}, 'passive', {
+			// eslint-disable-next-line getter-return
 			get: function() {
 				supports = true;
 			}
@@ -11063,6 +11032,7 @@ module.exports = {
 		// we can't use save() and restore() to restore the initial state. So make sure that at
 		// least the canvas context is reset to the default state by setting the canvas width.
 		// https://www.w3.org/TR/2011/WD-html5-20110525/the-canvas-element.html
+		// eslint-disable-next-line no-self-assign
 		canvas.width = canvas.width;
 
 		delete canvas[EXPANDO_KEY];
@@ -11128,12 +11098,12 @@ helpers.addEvent = addEventListener;
  */
 helpers.removeEvent = removeEventListener;
 
-},{"46":46}],49:[function(require,module,exports){
+},{"39":39}],42:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
-var basic = require(47);
-var dom = require(48);
+var helpers = require(39);
+var basic = require(40);
+var dom = require(41);
 
 // @TODO Make possible to select another platform at build time.
 var implementation = dom._enabled ? dom : basic;
@@ -11204,15 +11174,15 @@ module.exports = helpers.extend({
  * @prop {Number} y - The mouse y position, relative to the canvas (null for incompatible events)
  */
 
-},{"46":46,"47":47,"48":48}],50:[function(require,module,exports){
+},{"39":39,"40":40,"41":41}],43:[function(require,module,exports){
 'use strict';
 
 module.exports = {};
-module.exports.filler = require(51);
-module.exports.legend = require(52);
-module.exports.title = require(53);
+module.exports.filler = require(44);
+module.exports.legend = require(45);
+module.exports.title = require(46);
 
-},{"51":51,"52":52,"53":53}],51:[function(require,module,exports){
+},{"44":44,"45":45,"46":46}],44:[function(require,module,exports){
 /**
  * Plugin based on discussion from the following Chart.js issues:
  * @see https://github.com/chartjs/Chart.js/issues/2380#issuecomment-279961569
@@ -11221,9 +11191,9 @@ module.exports.title = require(53);
 
 'use strict';
 
-var defaults = require(26);
-var elements = require(41);
-var helpers = require(46);
+var defaults = require(19);
+var elements = require(34);
+var helpers = require(39);
 
 defaults._set('global', {
 	plugins: {
@@ -11532,13 +11502,13 @@ module.exports = {
 	}
 };
 
-},{"26":26,"41":41,"46":46}],52:[function(require,module,exports){
+},{"19":19,"34":34,"39":39}],45:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
-var layouts = require(31);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
+var layouts = require(24);
 
 var noop = helpers.noop;
 
@@ -12113,13 +12083,13 @@ module.exports = {
 	}
 };
 
-},{"26":26,"27":27,"31":31,"46":46}],53:[function(require,module,exports){
+},{"19":19,"20":20,"24":24,"39":39}],46:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var Element = require(27);
-var helpers = require(46);
-var layouts = require(31);
+var defaults = require(19);
+var Element = require(20);
+var helpers = require(39);
+var layouts = require(24);
 
 var noop = helpers.noop;
 
@@ -12367,11 +12337,11 @@ module.exports = {
 	}
 };
 
-},{"26":26,"27":27,"31":31,"46":46}],54:[function(require,module,exports){
+},{"19":19,"20":20,"24":24,"39":39}],47:[function(require,module,exports){
 'use strict';
 
-var Scale = require(33);
-var scaleService = require(34);
+var Scale = require(26);
+var scaleService = require(27);
 
 module.exports = function() {
 
@@ -12504,13 +12474,13 @@ module.exports = function() {
 	scaleService.registerScaleType('category', DatasetScale, defaultConfig);
 };
 
-},{"33":33,"34":34}],55:[function(require,module,exports){
+},{"26":26,"27":27}],48:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var helpers = require(46);
-var scaleService = require(34);
-var Ticks = require(35);
+var defaults = require(19);
+var helpers = require(39);
+var scaleService = require(27);
+var Ticks = require(28);
 
 module.exports = function(Chart) {
 
@@ -12698,11 +12668,11 @@ module.exports = function(Chart) {
 	scaleService.registerScaleType('linear', LinearScale, defaultConfig);
 };
 
-},{"26":26,"34":34,"35":35,"46":46}],56:[function(require,module,exports){
+},{"19":19,"27":27,"28":28,"39":39}],49:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
-var Scale = require(33);
+var helpers = require(39);
+var Scale = require(26);
 
 /**
  * Generate a set of linear ticks
@@ -12898,13 +12868,13 @@ module.exports = function(Chart) {
 	});
 };
 
-},{"33":33,"46":46}],57:[function(require,module,exports){
+},{"26":26,"39":39}],50:[function(require,module,exports){
 'use strict';
 
-var helpers = require(46);
-var Scale = require(33);
-var scaleService = require(34);
-var Ticks = require(35);
+var helpers = require(39);
+var Scale = require(26);
+var scaleService = require(27);
+var Ticks = require(28);
 
 /**
  * Generate a set of logarithmic ticks
@@ -13249,13 +13219,13 @@ module.exports = function(Chart) {
 	scaleService.registerScaleType('logarithmic', LogarithmicScale, defaultConfig);
 };
 
-},{"33":33,"34":34,"35":35,"46":46}],58:[function(require,module,exports){
+},{"26":26,"27":27,"28":28,"39":39}],51:[function(require,module,exports){
 'use strict';
 
-var defaults = require(26);
-var helpers = require(46);
-var scaleService = require(34);
-var Ticks = require(35);
+var defaults = require(19);
+var helpers = require(39);
+var scaleService = require(27);
+var Ticks = require(28);
 
 module.exports = function(Chart) {
 
@@ -13271,7 +13241,9 @@ module.exports = function(Chart) {
 		angleLines: {
 			display: true,
 			color: 'rgba(0, 0, 0, 0.1)',
-			lineWidth: 1
+			lineWidth: 1,
+			borderDash: [],
+			borderDashOffset: 0.0
 		},
 
 		gridLines: {
@@ -13327,6 +13299,16 @@ module.exports = function(Chart) {
 			family: fontFamily,
 			font: font
 		};
+	}
+
+	function getTickFontSize(scale) {
+		var opts = scale.options;
+		var tickOpts = opts.ticks;
+
+		if (tickOpts.display && opts.display) {
+			return helpers.valueOrDefault(tickOpts.fontSize, globalDefaults.defaultFontSize);
+		}
+		return 0;
 	}
 
 	function measureLabelSize(ctx, fontSize, label) {
@@ -13395,6 +13377,7 @@ module.exports = function(Chart) {
 		 */
 
 		var plFont = getPointLabelFontOptions(scale);
+		var paddingTop = getTickFontSize(scale) / 2;
 
 		// Get maximum radius of the polygon. Either half the height (minus the text width) or half the width.
 		// Use this to calculate the offset + change. - Make sure L/R protrusion is at least 0 to stop issues with centre points
@@ -13444,6 +13427,11 @@ module.exports = function(Chart) {
 			}
 		}
 
+		if (paddingTop && -paddingTop < furthestLimits.t) {
+			furthestLimits.t = -paddingTop;
+			furthestAngles.t = 0;
+		}
+
 		scale.setReductions(largestPossibleRadius, furthestLimits, furthestAngles);
 	}
 
@@ -13451,9 +13439,10 @@ module.exports = function(Chart) {
 	 * Helper function to fit a radial linear scale with no point labels
 	 */
 	function fit(scale) {
-		var largestPossibleRadius = Math.min(scale.height / 2, scale.width / 2);
-		scale.drawingArea = Math.round(largestPossibleRadius);
-		scale.setCenterPoint(0, 0, 0, 0);
+		var paddingTop = getTickFontSize(scale) / 2;
+		var largestPossibleRadius = Math.min((scale.height - paddingTop) / 2, scale.width / 2);
+		scale.drawingArea = Math.floor(largestPossibleRadius);
+		scale.setCenterPoint(0, 0, paddingTop, 0);
 	}
 
 	function getTextAlignForAngle(angle) {
@@ -13492,26 +13481,34 @@ module.exports = function(Chart) {
 		var ctx = scale.ctx;
 		var opts = scale.options;
 		var angleLineOpts = opts.angleLines;
+		var gridLineOpts = opts.gridLines;
 		var pointLabelOpts = opts.pointLabels;
+		var lineWidth = helpers.valueOrDefault(angleLineOpts.lineWidth, gridLineOpts.lineWidth);
+		var lineColor = helpers.valueOrDefault(angleLineOpts.color, gridLineOpts.color);
 
-		ctx.lineWidth = angleLineOpts.lineWidth;
-		ctx.strokeStyle = angleLineOpts.color;
+		ctx.save();
+		ctx.lineWidth = lineWidth;
+		ctx.strokeStyle = lineColor;
+		if (ctx.setLineDash) {
+			ctx.setLineDash(helpers.valueOrDefault(angleLineOpts.borderDash, gridLineOpts.borderDash) || []);
+			ctx.lineDashOffset = helpers.valueOrDefault(angleLineOpts.borderDashOffset, gridLineOpts.borderDashOffset) || 0.0;
+		}
 
 		var outerDistance = scale.getDistanceFromCenterForValue(opts.ticks.reverse ? scale.min : scale.max);
 
 		// Point Label Font
 		var plFont = getPointLabelFontOptions(scale);
 
+		ctx.font = plFont.font;
 		ctx.textBaseline = 'top';
 
 		for (var i = getValueCount(scale) - 1; i >= 0; i--) {
-			if (angleLineOpts.display) {
+			if (angleLineOpts.display && lineWidth && lineColor) {
 				var outerPosition = scale.getPointPosition(i, outerDistance);
 				ctx.beginPath();
 				ctx.moveTo(scale.xCenter, scale.yCenter);
 				ctx.lineTo(outerPosition.x, outerPosition.y);
 				ctx.stroke();
-				ctx.closePath();
 			}
 
 			if (pointLabelOpts.display) {
@@ -13520,7 +13517,6 @@ module.exports = function(Chart) {
 
 				// Keep this in loop since we may support array properties here
 				var pointLabelFontColor = helpers.valueAtIndexOrDefault(pointLabelOpts.fontColor, i, globalDefaults.defaultFontColor);
-				ctx.font = plFont.font;
 				ctx.fillStyle = pointLabelFontColor;
 
 				var angleRadians = scale.getIndexAngle(i);
@@ -13530,39 +13526,46 @@ module.exports = function(Chart) {
 				fillText(ctx, scale.pointLabels[i] || '', pointLabelPosition, plFont.size);
 			}
 		}
+		ctx.restore();
 	}
 
 	function drawRadiusLine(scale, gridLineOpts, radius, index) {
 		var ctx = scale.ctx;
-		ctx.strokeStyle = helpers.valueAtIndexOrDefault(gridLineOpts.color, index - 1);
-		ctx.lineWidth = helpers.valueAtIndexOrDefault(gridLineOpts.lineWidth, index - 1);
+		var circular = gridLineOpts.circular;
+		var valueCount = getValueCount(scale);
+		var lineColor = helpers.valueAtIndexOrDefault(gridLineOpts.color, index - 1);
+		var lineWidth = helpers.valueAtIndexOrDefault(gridLineOpts.lineWidth, index - 1);
+		var pointPosition;
 
-		if (scale.options.gridLines.circular) {
+		if ((!circular && !valueCount) || !lineColor || !lineWidth) {
+			return;
+		}
+
+		ctx.save();
+		ctx.strokeStyle = lineColor;
+		ctx.lineWidth = lineWidth;
+		if (ctx.setLineDash) {
+			ctx.setLineDash(gridLineOpts.borderDash || []);
+			ctx.lineDashOffset = gridLineOpts.borderDashOffset || 0.0;
+		}
+
+		ctx.beginPath();
+		if (circular) {
 			// Draw circular arcs between the points
-			ctx.beginPath();
 			ctx.arc(scale.xCenter, scale.yCenter, radius, 0, Math.PI * 2);
-			ctx.closePath();
-			ctx.stroke();
 		} else {
 			// Draw straight lines connecting each index
-			var valueCount = getValueCount(scale);
-
-			if (valueCount === 0) {
-				return;
-			}
-
-			ctx.beginPath();
-			var pointPosition = scale.getPointPosition(0, radius);
+			pointPosition = scale.getPointPosition(0, radius);
 			ctx.moveTo(pointPosition.x, pointPosition.y);
 
 			for (var i = 1; i < valueCount; i++) {
 				pointPosition = scale.getPointPosition(i, radius);
 				ctx.lineTo(pointPosition.x, pointPosition.y);
 			}
-
-			ctx.closePath();
-			ctx.stroke();
 		}
+		ctx.closePath();
+		ctx.stroke();
+		ctx.restore();
 	}
 
 	function numberOrZero(param) {
@@ -13577,8 +13580,8 @@ module.exports = function(Chart) {
 			// Set the unconstrained dimension before label rotation
 			me.width = me.maxWidth;
 			me.height = me.maxHeight;
-			me.xCenter = Math.round(me.width / 2);
-			me.yCenter = Math.round(me.height / 2);
+			me.xCenter = Math.floor(me.width / 2);
+			me.yCenter = Math.floor(me.height / 2);
 
 			var minSize = helpers.min([me.height, me.width]);
 			var tickFontSize = helpers.valueOrDefault(tickOpts.fontSize, globalDefaults.defaultFontSize);
@@ -13652,8 +13655,8 @@ module.exports = function(Chart) {
 			radiusReductionBottom = numberOrZero(radiusReductionBottom);
 
 			me.drawingArea = Math.min(
-				Math.round(largestPossibleRadius - (radiusReductionLeft + radiusReductionRight) / 2),
-				Math.round(largestPossibleRadius - (radiusReductionTop + radiusReductionBottom) / 2));
+				Math.floor(largestPossibleRadius - (radiusReductionLeft + radiusReductionRight) / 2),
+				Math.floor(largestPossibleRadius - (radiusReductionTop + radiusReductionBottom) / 2));
 			me.setCenterPoint(radiusReductionLeft, radiusReductionRight, radiusReductionTop, radiusReductionBottom);
 		},
 		setCenterPoint: function(leftMovement, rightMovement, topMovement, bottomMovement) {
@@ -13663,8 +13666,8 @@ module.exports = function(Chart) {
 			var maxTop = topMovement + me.drawingArea;
 			var maxBottom = me.height - bottomMovement - me.drawingArea;
 
-			me.xCenter = Math.round(((maxLeft + maxRight) / 2) + me.left);
-			me.yCenter = Math.round(((maxTop + maxBottom) / 2) + me.top);
+			me.xCenter = Math.floor(((maxLeft + maxRight) / 2) + me.left);
+			me.yCenter = Math.floor(((maxTop + maxBottom) / 2) + me.top);
 		},
 
 		getIndexAngle: function(index) {
@@ -13733,6 +13736,10 @@ module.exports = function(Chart) {
 				var tickFontFamily = valueOrDefault(tickOpts.fontFamily, globalDefaults.defaultFontFamily);
 				var tickLabelFont = helpers.fontString(tickFontSize, tickFontStyle, tickFontFamily);
 
+				if (opts.angleLines.display || opts.pointLabels.display) {
+					drawPointLabels(me);
+				}
+
 				helpers.each(me.ticks, function(label, index) {
 					// Don't draw a centre value (if it is minimum)
 					if (index > 0 || tickOpts.reverse) {
@@ -13770,10 +13777,6 @@ module.exports = function(Chart) {
 						}
 					}
 				});
-
-				if (opts.angleLines.display || opts.pointLabels.display) {
-					drawPointLabels(me);
-				}
 			}
 		}
 	});
@@ -13781,17 +13784,17 @@ module.exports = function(Chart) {
 	scaleService.registerScaleType('radialLinear', LinearRadialScale, defaultConfig);
 };
 
-},{"26":26,"34":34,"35":35,"46":46}],59:[function(require,module,exports){
+},{"19":19,"27":27,"28":28,"39":39}],52:[function(require,module,exports){
 /* global window: false */
 'use strict';
 
 var moment = require(1);
 moment = typeof moment === 'function' ? moment : window.moment;
 
-var defaults = require(26);
-var helpers = require(46);
-var Scale = require(33);
-var scaleService = require(34);
+var defaults = require(19);
+var helpers = require(39);
+var Scale = require(26);
+var scaleService = require(27);
 
 // Integer constants are from the ES6 spec.
 var MIN_INTEGER = Number.MIN_SAFE_INTEGER || -9007199254740991;
@@ -14569,5 +14572,5 @@ module.exports = function() {
 	scaleService.registerScaleType('time', TimeScale, defaultConfig);
 };
 
-},{"1":1,"26":26,"33":33,"34":34,"46":46}]},{},[7])(7)
+},{"1":1,"19":19,"26":26,"27":27,"39":39}]},{},[7])(7)
 });
