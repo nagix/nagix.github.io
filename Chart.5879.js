@@ -7793,10 +7793,10 @@ module.exports = Element.extend({
 		var itemsToDraw = [];
 
 		var axisWidth = helpers.valueAtIndexOrDefault(gridLines.lineWidth, 0, 0);
-		var alignedLeft = helpers.alignLinePixel(me.left, axisWidth);
-		var alignedRight = helpers.alignLinePixel(me.right, axisWidth, true);
-		var alignedTop = helpers.alignLinePixel(me.top, axisWidth);
-		var alignedBottom = helpers.alignLinePixel(me.bottom, axisWidth, true);
+		var alignedLeft = helpers.alignLinePixel(me.left, axisWidth, position === 'right');
+		var alignedRight = helpers.alignLinePixel(me.right, axisWidth);
+		var alignedTop = helpers.alignLinePixel(me.top, axisWidth, position === 'bottom');
+		var alignedBottom = helpers.alignLinePixel(me.bottom, axisWidth);
 
 		var xTickStart, xTickEnd, yTickStart, yTickEnd;
 		if (isHorizontal) {
