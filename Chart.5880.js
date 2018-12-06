@@ -5457,7 +5457,7 @@ module.exports = function() {
 
 	/**
 	 * Provided for backward compatibility, not available anymore
-	 * @function Chart.helpers.indexOf
+	 * @function Chart.helpers.aliasPixel
 	 * @deprecated since version 2.8.0
 	 * @todo remove at version 3
 	 */
@@ -5466,16 +5466,17 @@ module.exports = function() {
 	};
 
 	/**
-	 * Returns the aligned line pixel value to avoid anti-aliasing blur
+	 * Returns the aligned pixel value to avoid anti-aliasing blur
 	 * @param {Chart} chart - The chart instance.
-	 * @param {Number} linePixel - A line pixel value.
-	 * @param {Number} lineWidth - A line width.
-	 * @returns {Number} The aligned line pixel value.
+	 * @param {Number} pixel - A pixel value.
+	 * @param {Number} width - The width of the element.
+	 * @returns {Number} The aligned pixel value.
+	 * @private
 	 */
-	helpers.alignLinePixel = function(chart, linePixel, lineWidth) {
+	helpers._alignPixel = function(chart, pixel, width) {
 		var devicePixelRatio = chart.currentDevicePixelRatio;
-		var halfLineWidth = lineWidth / 2;
-		return Math.round((linePixel - halfLineWidth) * devicePixelRatio) / devicePixelRatio + halfLineWidth;
+		var halfWidth = width / 2;
+		return Math.round((pixel - halfWidth) * devicePixelRatio) / devicePixelRatio + halfWidth;
 	};
 
 	helpers.splineCurve = function(firstPoint, middlePoint, afterPoint, t) {
@@ -7799,27 +7800,26 @@ module.exports = Element.extend({
 
 		var itemsToDraw = [];
 
-		var axisWidth = helpers.valueAtIndexOrDefault(gridLines.lineWidth, 0, 0);
-		var alignedLeft = helpers.alignLinePixel(chart, me.left, axisWidth);
-		var alignedRight = helpers.alignLinePixel(chart, me.right, axisWidth);
-		var alignedTop = helpers.alignLinePixel(chart, me.top, axisWidth);
-		var alignedBottom = helpers.alignLinePixel(chart, me.bottom, axisWidth);
+		var axisWidth = gridLines.drawBorder ? helpers.valueAtIndexOrDefault(gridLines.lineWidth, 0, 0) : 0;
+		var alignPixel = helpers._alignPixel;
+		var borderValue, tickStart, tickEnd;
 
-		var xTickStart, xTickEnd, yTickStart, yTickEnd;
-		if (isHorizontal) {
-			if (position === 'top') {
-				yTickStart = me.bottom - tl;
-				yTickEnd = alignedBottom - axisWidth / 2;
-			} else {
-				yTickStart = alignedTop + axisWidth / 2;
-				yTickEnd = me.top + tl;
-			}
+		if (position === 'top') {
+			borderValue = alignPixel(chart, me.bottom, axisWidth);
+			tickStart = me.bottom - tl;
+			tickEnd = borderValue - axisWidth / 2;
+		} else if (position === 'bottom') {
+			borderValue = alignPixel(chart, me.top, axisWidth);
+			tickStart = borderValue + axisWidth / 2;
+			tickEnd = me.top + tl;
 		} else if (position === 'left') {
-			xTickStart = me.right - tl;
-			xTickEnd = alignedRight - axisWidth / 2;
+			borderValue = alignPixel(chart, me.right, axisWidth);
+			tickStart = me.right - tl;
+			tickEnd = borderValue - axisWidth / 2;
 		} else {
-			xTickStart = alignedLeft + axisWidth / 2;
-			xTickEnd = me.left + tl;
+			borderValue = alignPixel(chart, me.left, axisWidth);
+			tickStart = borderValue + axisWidth / 2;
+			tickEnd = me.left + tl;
 		}
 
 		var epsilon = 0.0000001; // 0.0000001 is margin in pixels for Accumulated error.
@@ -7857,21 +7857,20 @@ module.exports = Element.extend({
 					lineColor = 'rgba(0,0,0,0)';
 				}
 
-				tx1 = tx2 = x1 = x2 = helpers.alignLinePixel(chart, lineValue, lineWidth);
-				ty1 = yTickStart;
-				ty2 = yTickEnd;
-				y1 = chartArea.top;
-				y2 = chartArea.bottom;
-
+				tx1 = tx2 = x1 = x2 = alignPixel(chart, lineValue, lineWidth);
+				ty1 = tickStart;
+				ty2 = tickEnd;
 				labelX = me.getPixelForTick(index) + labelOffset; // x values for optionTicks (need to consider offsetLabel option)
 
 				if (position === 'top') {
-					y1 = helpers.alignLinePixel(chart, y1, axisWidth) + axisWidth / 2;
+					y1 = alignPixel(chart, chartArea.top, axisWidth) + axisWidth / 2;
+					y2 = chartArea.bottom;
 					textBaseline = !isRotated ? 'bottom' : 'middle';
 					textAlign = !isRotated ? 'center' : 'left';
 					labelY = me.bottom - labelYOffset;
 				} else {
-					y2 = helpers.alignLinePixel(chart, y2, axisWidth) - axisWidth / 2;
+					y1 = chartArea.top;
+					y2 = alignPixel(chart, chartArea.bottom, axisWidth) - axisWidth / 2;
 					textBaseline = !isRotated ? 'top' : 'middle';
 					textAlign = !isRotated ? 'center' : 'right';
 					labelY = me.top + labelYOffset;
@@ -7883,20 +7882,19 @@ module.exports = Element.extend({
 					lineColor = 'rgba(0,0,0,0)';
 				}
 
-				tx1 = xTickStart;
-				tx2 = xTickEnd;
-				x1 = chartArea.left;
-				x2 = chartArea.right;
-				ty1 = ty2 = y1 = y2 = helpers.alignLinePixel(chart, lineValue, lineWidth);
-
+				tx1 = tickStart;
+				tx2 = tickEnd;
+				ty1 = ty2 = y1 = y2 = alignPixel(chart, lineValue, lineWidth);
 				labelY = me.getPixelForTick(index) + labelOffset;
 
 				if (position === 'left') {
-					x1 = helpers.alignLinePixel(chart, x1, axisWidth) + axisWidth / 2;
+					x1 = alignPixel(chart, chartArea.left, axisWidth) + axisWidth / 2;
+					x2 = chartArea.right;
 					textAlign = isMirrored ? 'left' : 'right';
 					labelX = me.right - labelXOffset;
 				} else {
-					x2 = helpers.alignLinePixel(chart, x2, axisWidth) - axisWidth / 2;
+					x1 = chartArea.left;
+					x2 = alignPixel(chart, chartArea.right, axisWidth) - axisWidth / 2;
 					textAlign = isMirrored ? 'right' : 'left';
 					labelX = me.left + labelXOffset;
 				}
@@ -8016,29 +8014,28 @@ module.exports = Element.extend({
 			context.restore();
 		}
 
-		if (gridLines.drawBorder) {
+		if (axisWidth) {
 			// Draw the line at the edge of the axis
 			var firstLineWidth = axisWidth;
 			var lastLineWidth = helpers.valueAtIndexOrDefault(gridLines.lineWidth, ticks.length - 1, 0);
-			var x1 = helpers.alignLinePixel(chart, me.left, firstLineWidth) - firstLineWidth / 2;
-			var x2 = helpers.alignLinePixel(chart, me.right, lastLineWidth) + lastLineWidth / 2;
-			var y1 = helpers.alignLinePixel(chart, me.top, firstLineWidth) - firstLineWidth / 2;
-			var y2 = helpers.alignLinePixel(chart, me.bottom, lastLineWidth) + lastLineWidth / 2;
+			var x1, x2, y1, y2;
 
 			if (isHorizontal) {
-				y1 = y2 = position === 'top' ? alignedBottom : alignedTop;
+				x1 = alignPixel(chart, me.left, firstLineWidth) - firstLineWidth / 2;
+				x2 = alignPixel(chart, me.right, lastLineWidth) + lastLineWidth / 2;
+				y1 = y2 = borderValue;
 			} else {
-				x1 = x2 = position === 'left' ? alignedRight : alignedLeft;
+				y1 = alignPixel(chart, me.top, firstLineWidth) - firstLineWidth / 2;
+				y2 = alignPixel(chart, me.bottom, lastLineWidth) + lastLineWidth / 2;
+				x1 = x2 = borderValue;
 			}
 
-			if (axisWidth) {
-				context.lineWidth = axisWidth;
-				context.strokeStyle = helpers.valueAtIndexOrDefault(gridLines.color, 0);
-				context.beginPath();
-				context.moveTo(x1, y1);
-				context.lineTo(x2, y2);
-				context.stroke();
-			}
+			context.lineWidth = axisWidth;
+			context.strokeStyle = helpers.valueAtIndexOrDefault(gridLines.color, 0);
+			context.beginPath();
+			context.moveTo(x1, y1);
+			context.lineTo(x2, y2);
+			context.stroke();
 		}
 	}
 });
