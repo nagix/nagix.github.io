@@ -10739,52 +10739,41 @@ function generateTicks(generationOptions, dataRange) {
 	// for details.
 
 	var stepSize = generationOptions.stepSize;
+	var unit = stepSize || 1;
+	var maxNumSpaces = generationOptions.maxTicks - 1;
 	var min = generationOptions.min;
 	var max = generationOptions.max;
-	var spacing, precision, factor, niceMin, niceMax, numSpaces, maxNumSpaces;
+	var precision = generationOptions.precision;
+	var spacing, factor, niceMin, niceMax, numSpaces;
 
-	if (stepSize && stepSize > 0) {
-		spacing = stepSize;
-		if (generationOptions.maxTicksLimit) {
-			maxNumSpaces = generationOptions.maxTicksLimit - 1;
-			// spacing is set to stepSize multiplied by a nice number of
-			// Math.ceil((max - min) / maxNumSpaces / stepSize) = num of steps that should be grouped
-			spacing *= helpers$1.niceNum(Math.ceil((dataRange.max - dataRange.min) / maxNumSpaces / stepSize));
-			numSpaces = Math.ceil(dataRange.max / spacing) - Math.floor(dataRange.min / spacing);
-			if (numSpaces > maxNumSpaces) {
-				// If the calculated num of spaces exceeds maxNumSpaces, recalculate it
-				spacing = helpers$1.niceNum(Math.ceil(numSpaces * spacing / maxNumSpaces / stepSize)) * stepSize;
-			}
-		}
-	} else {
-		maxNumSpaces = generationOptions.maxTicks - 1;
-		// spacing is set to a nice number of (max - min) / maxNumSpaces
-		spacing = helpers$1.niceNum((dataRange.max - dataRange.min) / maxNumSpaces);
-		numSpaces = Math.ceil(dataRange.max / spacing) - Math.floor(dataRange.min / spacing);
-		if (numSpaces > maxNumSpaces) {
-			// If the calculated num of spaces exceeds maxNumSpaces, recalculate it
-			spacing = helpers$1.niceNum(numSpaces * spacing / maxNumSpaces);
-		}
-
-		precision = generationOptions.precision;
-		if (!helpers$1.isNullOrUndef(precision)) {
-			// If the user specified a precision, round to that number of decimal places
-			factor = Math.pow(10, precision);
-			spacing = Math.ceil(spacing * factor) / factor;
-		}
+	// spacing is set to a nice number of the dataRange divided by maxNumSpaces.
+	// stepSize is used as a minimum unit if it is specified.
+	spacing = helpers$1.niceNum((dataRange.max - dataRange.min) / maxNumSpaces / unit) * unit;
+	numSpaces = Math.ceil(dataRange.max / spacing) - Math.floor(dataRange.min / spacing);
+	if (numSpaces > maxNumSpaces) {
+		// If the calculated num of spaces exceeds maxNumSpaces, recalculate it
+		spacing = helpers$1.niceNum(numSpaces * spacing / maxNumSpaces / unit) * unit;
 	}
-	// If a precision is not specified, calculate factor based on spacing
-	if (!factor) {
+
+	if (stepSize || helpers$1.isNullOrUndef(precision)) {
+		// If a precision is not specified, calculate factor based on spacing
 		factor = Math.pow(10, helpers$1.decimalPlaces(spacing));
+	} else {
+		// If the user specified a precision, round to that number of decimal places
+		factor = Math.pow(10, precision);
+		spacing = Math.ceil(spacing * factor) / factor;
 	}
+
 	niceMin = Math.floor(dataRange.min / spacing) * spacing;
 	niceMax = Math.ceil(dataRange.max / spacing) * spacing;
 
 	// If min, max and stepSize is set and they make an evenly spaced scale use it.
-	if (!helpers$1.isNullOrUndef(min) && !helpers$1.isNullOrUndef(max) && stepSize) {
+	if (stepSize) {
 		// If very close to our whole number, use it.
-		if (helpers$1.almostWhole((max - min) / stepSize, spacing / 1000)) {
+		if (!helpers$1.isNullOrUndef(min) && helpers$1.almostWhole(min / spacing, spacing / 1000)) {
 			niceMin = min;
+		}
+		if (!helpers$1.isNullOrUndef(max) && helpers$1.almostWhole(max / spacing, spacing / 1000)) {
 			niceMax = max;
 		}
 	}
@@ -10886,7 +10875,32 @@ var scale_linearbase = function(Chart) {
 				}
 			}
 		},
-		getTickLimit: noop,
+
+		getTickLimit: function() {
+			var me = this;
+			var tickOpts = me.options.ticks;
+			var stepSize = tickOpts.stepSize;
+			var maxTicksLimit = tickOpts.maxTicksLimit;
+			var maxTicks;
+
+			if (stepSize) {
+				maxTicks = Math.ceil(me.max / stepSize) - Math.floor(me.min / stepSize) + 1;
+			} else {
+				maxTicks = me._computeTickLimit();
+				maxTicksLimit = maxTicksLimit || 11;
+			}
+
+			if (maxTicksLimit) {
+				maxTicks = Math.min(maxTicksLimit, maxTicks);
+			}
+
+			return maxTicks;
+		},
+
+		_computeTickLimit: function() {
+			return Number.POSITIVE_INFINITY;
+		},
+
 		handleDirectionalChanges: noop,
 
 		buildTicks: function() {
@@ -10903,7 +10917,6 @@ var scale_linearbase = function(Chart) {
 
 			var numericGeneratorOptions = {
 				maxTicks: maxTicks,
-				maxTicksLimit: tickOpts.maxTicksLimit,
 				min: tickOpts.min,
 				max: tickOpts.max,
 				precision: tickOpts.precision,
@@ -11197,20 +11210,16 @@ var scale_linear = function(Chart) {
 			// Common base implementation to handle ticks.min, ticks.max, ticks.beginAtZero
 			this.handleTickRangeOptions();
 		},
-		getTickLimit: function() {
-			var maxTicks;
+		// Returns the maximum number of ticks based on the scale dimension
+		_computeTickLimit: function() {
 			var me = this;
-			var tickOpts = me.options.ticks;
+			var tickFont;
 
 			if (me.isHorizontal()) {
-				maxTicks = Math.min(tickOpts.maxTicksLimit ? tickOpts.maxTicksLimit : 11, Math.ceil(me.width / 40));
-			} else {
-				// The factor of 2 used to scale the font size has been experimentally determined.
-				var tickFontSize = helpers$1.valueOrDefault(tickOpts.fontSize, core_defaults.global.defaultFontSize);
-				maxTicks = Math.min(tickOpts.maxTicksLimit ? tickOpts.maxTicksLimit : 11, Math.ceil(me.height / (1.5 * tickFontSize)));
+				return Math.ceil(me.width / 40);
 			}
-
-			return maxTicks;
+			tickFont = helpers$1.options._parseFont(me.options.ticks);
+			return Math.ceil(me.height / tickFont.lineHeight);
 		},
 		// Called after the ticks are built. We need
 		handleDirectionalChanges: function() {
@@ -11946,11 +11955,9 @@ var scale_radialLinear = function(Chart) {
 			// Common base implementation to handle ticks.min, ticks.max, ticks.beginAtZero
 			me.handleTickRangeOptions();
 		},
-		getTickLimit: function() {
-			var opts = this.options;
-			var tickOpts = opts.ticks;
-			var tickBackdropHeight = getTickBackdropHeight(opts);
-			return Math.min(tickOpts.maxTicksLimit ? tickOpts.maxTicksLimit : 11, Math.ceil(this.drawingArea / tickBackdropHeight));
+		// Returns the maximum number of ticks based on the scale dimension
+		_computeTickLimit: function() {
+			return Math.ceil(this.drawingArea / getTickBackdropHeight(this.options));
 		},
 		convertTicksToLabels: function() {
 			var me = this;
