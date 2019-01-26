@@ -3072,6 +3072,34 @@ helpers$1.extend(DatasetController.prototype, {
 		return this.chart.scales[scaleID];
 	},
 
+	/**
+	 * @private
+	 */
+	_getValueScaleId: function() {
+		return this.getMeta().yAxisID;
+	},
+
+	/**
+	 * @private
+	 */
+	_getIndexScaleId: function() {
+		return this.getMeta().xAxisID;
+	},
+
+	/**
+	 * @private
+	 */
+	_getValueScale: function() {
+		return this.getScaleForId(this._getValueScaleId());
+	},
+
+	/**
+	 * @private
+	 */
+	_getIndexScale: function() {
+		return this.getScaleForId(this._getIndexScaleId());
+	},
+
 	reset: function() {
 		this.update(true);
 	},
@@ -3232,7 +3260,8 @@ helpers$1.extend(DatasetController.prototype, {
 	 * @private
 	 */
 	onDataPush: function() {
-		this.insertElements(this.getDataset().data.length - 1, arguments.length);
+		var count = arguments.length;
+		this.insertElements(this.getDataset().data.length - count, count);
 	},
 
 	/**
@@ -3357,7 +3386,7 @@ var element_arc = core_element.extend({
 		ctx.save();
 
 		ctx.beginPath();
-		ctx.arc(vm.x, vm.y, vm.outerRadius - pixelMargin, sA, eA);
+		ctx.arc(vm.x, vm.y, Math.max(vm.outerRadius - pixelMargin, 0), sA, eA);
 		ctx.arc(vm.x, vm.y, vm.innerRadius, eA, sA, true);
 		ctx.closePath();
 
@@ -3968,7 +3997,7 @@ var controller_bar = core_datasetController.extend({
 	_updateElementGeometry: function(rectangle, index, reset) {
 		var me = this;
 		var model = rectangle._model;
-		var vscale = me.getValueScale();
+		var vscale = me._getValueScale();
 		var base = vscale.getBasePixel();
 		var horizontal = vscale.isHorizontal();
 		var ruler = me._ruler || me.getRuler();
@@ -3984,34 +4013,6 @@ var controller_bar = core_datasetController.extend({
 	},
 
 	/**
-	 * @private
-	 */
-	getValueScaleId: function() {
-		return this.getMeta().yAxisID;
-	},
-
-	/**
-	 * @private
-	 */
-	getIndexScaleId: function() {
-		return this.getMeta().xAxisID;
-	},
-
-	/**
-	 * @private
-	 */
-	getValueScale: function() {
-		return this.getScaleForId(this.getValueScaleId());
-	},
-
-	/**
-	 * @private
-	 */
-	getIndexScale: function() {
-		return this.getScaleForId(this.getIndexScaleId());
-	},
-
-	/**
 	 * Returns the stacks based on groups and bar visibility.
 	 * @param {Number} [last] - The dataset index
 	 * @returns {Array} The stack list
@@ -4020,7 +4021,7 @@ var controller_bar = core_datasetController.extend({
 	_getStacks: function(last) {
 		var me = this;
 		var chart = me.chart;
-		var scale = me.getIndexScale();
+		var scale = me._getIndexScale();
 		var stacked = scale.options.stacked;
 		var ilen = last === undefined ? chart.data.datasets.length : last + 1;
 		var stacks = [];
@@ -4070,7 +4071,7 @@ var controller_bar = core_datasetController.extend({
 	 */
 	getRuler: function() {
 		var me = this;
-		var scale = me.getIndexScale();
+		var scale = me._getIndexScale();
 		var stackCount = me.getStackCount();
 		var datasetIndex = me.index;
 		var isHorizontal = scale.isHorizontal();
@@ -4105,7 +4106,7 @@ var controller_bar = core_datasetController.extend({
 		var me = this;
 		var chart = me.chart;
 		var meta = me.getMeta();
-		var scale = me.getValueScale();
+		var scale = me._getValueScale();
 		var isHorizontal = scale.isHorizontal();
 		var datasets = chart.data.datasets;
 		var value = +scale.getRightValue(datasets[datasetIndex].data[index]);
@@ -4121,7 +4122,7 @@ var controller_bar = core_datasetController.extend({
 
 				if (imeta.bar &&
 					imeta.stack === stack &&
-					imeta.controller.getValueScaleId() === scale.id &&
+					imeta.controller._getValueScaleId() === scale.id &&
 					chart.isDatasetVisible(i)) {
 
 					ivalue = +scale.getRightValue(datasets[i].data[index]);
@@ -4180,7 +4181,7 @@ var controller_bar = core_datasetController.extend({
 	draw: function() {
 		var me = this;
 		var chart = me.chart;
-		var scale = me.getValueScale();
+		var scale = me._getValueScale();
 		var rects = me.getMeta().data;
 		var dataset = me.getDataset();
 		var ilen = rects.length;
@@ -4577,7 +4578,7 @@ var controller_doughnut = core_datasetController.extend({
 		}
 
 		for (i = 0, ilen = arcs.length; i < ilen; ++i) {
-			arcs[i]._options = me._resolveElementOptions(arcs[i], i, reset);
+			arcs[i]._options = me._resolveElementOptions(arcs[i], i);
 		}
 
 		chart.borderWidth = me.getMaxBorderWidth();
@@ -4842,14 +4843,14 @@ var controller_horizontalBar = controller_bar.extend({
 	/**
 	 * @private
 	 */
-	getValueScaleId: function() {
+	_getValueScaleId: function() {
 		return this.getMeta().xAxisID;
 	},
 
 	/**
 	 * @private
 	 */
-	getIndexScaleId: function() {
+	_getIndexScaleId: function() {
 		return this.getMeta().yAxisID;
 	}
 });
@@ -4952,52 +4953,6 @@ var controller_line = core_datasetController.extend({
 		}
 	},
 
-	getPointBackgroundColor: function(point, index) {
-		var dataset = this.getDataset();
-		var custom = point.custom || {};
-
-		return resolve$4([
-			custom.backgroundColor,
-			dataset.pointBackgroundColor,
-			dataset.backgroundColor,
-			this.chart.options.elements.point.backgroundColor
-		], undefined, index);
-	},
-
-	getPointBorderColor: function(point, index) {
-		var dataset = this.getDataset();
-		var custom = point.custom || {};
-
-		return resolve$4([
-			custom.borderColor,
-			dataset.pointBorderColor,
-			dataset.borderColor,
-			this.chart.options.elements.point.borderColor
-		], undefined, index);
-	},
-
-	getPointBorderWidth: function(point, index) {
-		var dataset = this.getDataset();
-		var custom = point.custom || {};
-
-		return resolve$4([
-			custom.borderWidth,
-			dataset.pointBorderWidth,
-			dataset.borderWidth,
-			this.chart.options.elements.point.borderWidth
-		], undefined, index);
-	},
-
-	getPointRotation: function(point, index) {
-		var custom = point.custom || {};
-
-		return resolve$4([
-			custom.rotation,
-			this.getDataset().pointRotation,
-			this.chart.options.elements.point.rotation
-		], undefined, index);
-	},
-
 	updateElement: function(point, index, reset) {
 		var me = this;
 		var meta = me.getMeta();
@@ -5007,16 +4962,9 @@ var controller_line = core_datasetController.extend({
 		var value = dataset.data[index];
 		var yScale = me.getScaleForId(meta.yAxisID);
 		var xScale = me.getScaleForId(meta.xAxisID);
-		var pointOptions = me.chart.options.elements.point;
 		var x, y;
 
-		// Compatibility: If the properties are defined with only the old name, use those values
-		if ((dataset.radius !== undefined) && (dataset.pointRadius === undefined)) {
-			dataset.pointRadius = dataset.radius;
-		}
-		if ((dataset.hitRadius !== undefined) && (dataset.pointHitRadius === undefined)) {
-			dataset.pointHitRadius = dataset.hitRadius;
-		}
+		var options = me._resolveElementOptions(point, index);
 
 		x = xScale.getPixelForValue(typeof value === 'object' ? value : NaN, index, datasetIndex);
 		y = reset ? yScale.getBasePixel() : me.calculatePointY(value, index, datasetIndex);
@@ -5024,6 +4972,7 @@ var controller_line = core_datasetController.extend({
 		// Utility
 		point._xScale = xScale;
 		point._yScale = yScale;
+		point._options = options;
 		point._datasetIndex = datasetIndex;
 		point._index = index;
 
@@ -5033,17 +4982,66 @@ var controller_line = core_datasetController.extend({
 			y: y,
 			skip: custom.skip || isNaN(x) || isNaN(y),
 			// Appearance
-			radius: resolve$4([custom.radius, dataset.pointRadius, pointOptions.radius], undefined, index),
-			pointStyle: resolve$4([custom.pointStyle, dataset.pointStyle, pointOptions.pointStyle], undefined, index),
-			rotation: me.getPointRotation(point, index),
-			backgroundColor: me.getPointBackgroundColor(point, index),
-			borderColor: me.getPointBorderColor(point, index),
-			borderWidth: me.getPointBorderWidth(point, index),
+			radius: options.radius,
+			pointStyle: options.pointStyle,
+			rotation: options.rotation,
+			backgroundColor: options.backgroundColor,
+			borderColor: options.borderColor,
+			borderWidth: options.borderWidth,
 			tension: meta.dataset._model ? meta.dataset._model.tension : 0,
 			steppedLine: meta.dataset._model ? meta.dataset._model.steppedLine : false,
 			// Tooltip
-			hitRadius: resolve$4([custom.hitRadius, dataset.pointHitRadius, pointOptions.hitRadius], undefined, index)
+			hitRadius: options.hitRadius,
 		};
+	},
+
+	/**
+	 * @private
+	 */
+	_resolveElementOptions: function(point, index) {
+		var me = this;
+		var chart = me.chart;
+		var datasets = chart.data.datasets;
+		var dataset = datasets[me.index];
+		var custom = point.custom || {};
+		var options = chart.options.elements.point;
+		var values = {};
+		var i, ilen, key;
+
+		// Scriptable options
+		var context = {
+			chart: chart,
+			dataIndex: index,
+			dataset: dataset,
+			datasetIndex: me.index
+		};
+
+		var ELEMENT_OPTIONS = {
+			backgroundColor: 'pointBackgroundColor',
+			borderColor: 'pointBorderColor',
+			borderWidth: 'pointBorderWidth',
+			hitRadius: 'pointHitRadius',
+			hoverBackgroundColor: 'pointHoverBackgroundColor',
+			hoverBorderColor: 'pointHoverBorderColor',
+			hoverBorderWidth: 'pointHoverBorderWidth',
+			hoverRadius: 'pointHoverRadius',
+			pointStyle: 'pointStyle',
+			radius: 'pointRadius',
+			rotation: 'pointRotation',
+		};
+		var keys = Object.keys(ELEMENT_OPTIONS);
+
+		for (i = 0, ilen = keys.length; i < ilen; ++i) {
+			key = keys[i];
+			values[key] = resolve$4([
+				custom[key],
+				dataset[ELEMENT_OPTIONS[key]],
+				dataset[key],
+				options[key]
+			], context, index);
+		}
+
+		return values;
 	},
 
 	calculatePointY: function(value, index, datasetIndex) {
@@ -5166,26 +5164,26 @@ var controller_line = core_datasetController.extend({
 		}
 	},
 
-	setHoverStyle: function(element) {
-		// Point
-		var dataset = this.chart.data.datasets[element._datasetIndex];
-		var index = element._index;
-		var custom = element.custom || {};
-		var model = element._model;
+	/**
+	 * @protected
+	 */
+	setHoverStyle: function(point) {
+		var model = point._model;
+		var options = point._options;
 		var getHoverColor = helpers$1.getHoverColor;
 
-		element.$previousStyle = {
+		point.$previousStyle = {
 			backgroundColor: model.backgroundColor,
 			borderColor: model.borderColor,
 			borderWidth: model.borderWidth,
 			radius: model.radius
 		};
 
-		model.backgroundColor = resolve$4([custom.hoverBackgroundColor, dataset.pointHoverBackgroundColor, getHoverColor(model.backgroundColor)], undefined, index);
-		model.borderColor = resolve$4([custom.hoverBorderColor, dataset.pointHoverBorderColor, getHoverColor(model.borderColor)], undefined, index);
-		model.borderWidth = resolve$4([custom.hoverBorderWidth, dataset.pointHoverBorderWidth, model.borderWidth], undefined, index);
-		model.radius = resolve$4([custom.hoverRadius, dataset.pointHoverRadius, this.chart.options.elements.point.hoverRadius], undefined, index);
-	}
+		model.backgroundColor = valueOrDefault$4(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
+		model.borderColor = valueOrDefault$4(options.hoverBorderColor, getHoverColor(options.borderColor));
+		model.borderWidth = valueOrDefault$4(options.hoverBorderWidth, options.borderWidth);
+		model.radius = valueOrDefault$4(options.hoverRadius, options.radius);
+	},
 });
 
 var resolve$5 = helpers$1.options.resolve;
@@ -5306,6 +5304,7 @@ var controller_polarArea = core_datasetController.extend({
 		var start = me.chart.options.startAngle || 0;
 		var starts = me._starts = [];
 		var angles = me._angles = [];
+		var arcs = meta.data;
 		var i, ilen, angle;
 
 		me._updateRadius();
@@ -5319,9 +5318,10 @@ var controller_polarArea = core_datasetController.extend({
 			start += angle;
 		}
 
-		helpers$1.each(meta.data, function(arc, index) {
-			me.updateElement(arc, index, reset);
-		});
+		for (i = 0, ilen = arcs.length; i < ilen; ++i) {
+			arcs[i]._options = me._resolveElementOptions(arcs[i], i);
+			me.updateElement(arcs[i], i, reset);
+		}
 	},
 
 	/**
@@ -5361,6 +5361,7 @@ var controller_polarArea = core_datasetController.extend({
 		var endAngle = startAngle + (arc.hidden ? 0 : me._angles[index]);
 
 		var resetRadius = animationOpts.animateScale ? 0 : scale.getDistanceFromCenterForValue(dataset.data[index]);
+		var options = arc._options || {};
 
 		helpers$1.extend(arc, {
 			// Utility
@@ -5370,6 +5371,10 @@ var controller_polarArea = core_datasetController.extend({
 
 			// Desired view properties
 			_model: {
+				backgroundColor: options.backgroundColor,
+				borderColor: options.borderColor,
+				borderWidth: options.borderWidth,
+				borderAlign: options.borderAlign,
 				x: centerX,
 				y: centerY,
 				innerRadius: 0,
@@ -5379,16 +5384,6 @@ var controller_polarArea = core_datasetController.extend({
 				label: helpers$1.valueAtIndexOrDefault(labels, index, labels[index])
 			}
 		});
-
-		// Apply border and fill style
-		var elementOpts = this.chart.options.elements.arc;
-		var custom = arc.custom || {};
-		var model = arc._model;
-
-		model.backgroundColor = resolve$5([custom.backgroundColor, dataset.backgroundColor, elementOpts.backgroundColor], undefined, index);
-		model.borderColor = resolve$5([custom.borderColor, dataset.borderColor, elementOpts.borderColor], undefined, index);
-		model.borderWidth = resolve$5([custom.borderWidth, dataset.borderWidth, elementOpts.borderWidth], undefined, index);
-		model.borderAlign = resolve$5([custom.borderAlign, dataset.borderAlign, elementOpts.borderAlign], undefined, index);
 
 		arc.pivot();
 	},
@@ -5405,6 +5400,68 @@ var controller_polarArea = core_datasetController.extend({
 		});
 
 		return count;
+	},
+
+	/**
+	 * @protected
+	 */
+	setHoverStyle: function(arc) {
+		var model = arc._model;
+		var options = arc._options;
+		var getHoverColor = helpers$1.getHoverColor;
+		var valueOrDefault = helpers$1.valueOrDefault;
+
+		arc.$previousStyle = {
+			backgroundColor: model.backgroundColor,
+			borderColor: model.borderColor,
+			borderWidth: model.borderWidth,
+		};
+
+		model.backgroundColor = valueOrDefault(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
+		model.borderColor = valueOrDefault(options.hoverBorderColor, getHoverColor(options.borderColor));
+		model.borderWidth = valueOrDefault(options.hoverBorderWidth, options.borderWidth);
+	},
+
+	/**
+	 * @private
+	 */
+	_resolveElementOptions: function(arc, index) {
+		var me = this;
+		var chart = me.chart;
+		var dataset = me.getDataset();
+		var custom = arc.custom || {};
+		var options = chart.options.elements.arc;
+		var values = {};
+		var i, ilen, key;
+
+		// Scriptable options
+		var context = {
+			chart: chart,
+			dataIndex: index,
+			dataset: dataset,
+			datasetIndex: me.index
+		};
+
+		var keys = [
+			'backgroundColor',
+			'borderColor',
+			'borderWidth',
+			'borderAlign',
+			'hoverBackgroundColor',
+			'hoverBorderColor',
+			'hoverBorderWidth',
+		];
+
+		for (i = 0, ilen = keys.length; i < ilen; ++i) {
+			key = keys[i];
+			values[key] = resolve$5([
+				custom[key],
+				dataset[key],
+				options[key]
+			], context, index);
+		}
+
+		return values;
 	},
 
 	/**
@@ -8684,10 +8741,6 @@ helpers$1.extend(Chart.prototype, /** @lends Chart */ {
 			box.draw(me.chartArea);
 		}, me);
 
-		if (me.scale) {
-			me.scale.draw();
-		}
-
 		me.drawDatasets(easingValue);
 		me._drawTooltip(easingValue);
 
@@ -10023,17 +10076,6 @@ function getPixelForGridLine(scale, index, offsetGridLines) {
 	return lineValue;
 }
 
-function measureText(ctx, data, gc, string) {
-	var key = ctx.font + ';' + string;
-	var textWidth = data[key];
-
-	if (!textWidth) {
-		textWidth = data[key] = ctx.measureText(string).width;
-		gc.push(key);
-	}
-	return textWidth;
-}
-
 /**
  * Returns {width, height, offset} objects for the first, last, widest, highest tick
  * labels where offset indicates the anchor point offset from the top in pixels.
@@ -10043,44 +10085,51 @@ function computeLabelSizes(ctx, tickFonts, ticks, cache) {
 	var widths = [];
 	var heights = [];
 	var offsets = [];
-	var data = cache.data = cache.data || {};
-	var gc = cache.garbageCollect = cache.garbageCollect || [];
-	var gcLen, i, j, jlen, tick, label, tickFont, width, height, nestedLabel, widest, highest;
+	var i, j, jlen, label, tickFont, fontString, data, gc, lineHeight, width, height, nestedLabel, widest, highest;
+
+	helpers$1.each(tickFonts, function(font) {
+		cache[font.string] = cache[font.string] || {data: {}, garbageCollect: []};
+	});
 
 	for (i = 0; i < length; ++i) {
-		tick = ticks[i];
-		label = tick.label;
-		tickFont = tick.major ? tickFonts.major : tickFonts.minor;
+		label = ticks[i].label;
+		tickFont = ticks[i].major ? tickFonts.major : tickFonts.minor;
+		ctx.font = fontString = tickFont.string;
+		data = cache[fontString].data;
+		gc = cache[fontString].garbageCollect;
+		lineHeight = tickFont.lineHeight;
 		width = height = 0;
-		ctx.font = tickFont.string;
 		// Undefined labels and arrays should not be measured
 		if (!helpers$1.isNullOrUndef(label) && !helpers$1.isArray(label)) {
-			width = measureText(ctx, data, gc, label);
-			height = tickFont.lineHeight;
+			width = helpers$1.measureText(ctx, data, gc, width, label);
+			height = lineHeight;
 		} else if (helpers$1.isArray(label)) {
 			// if it is an array lets measure each element
 			for (j = 0, jlen = label.length; j < jlen; ++j) {
 				nestedLabel = label[j];
 				// Undefined labels and arrays should not be measured
 				if (!helpers$1.isNullOrUndef(nestedLabel) && !helpers$1.isArray(nestedLabel)) {
-					width = Math.max(width, measureText(ctx, data, gc, nestedLabel));
-					height += tickFont.lineHeight;
+					width = helpers$1.measureText(ctx, data, gc, width, nestedLabel);
+					height += lineHeight;
 				}
 			}
 		}
 		widths.push(width);
 		heights.push(height);
-		offsets.push(tickFont.lineHeight / 2);
+		offsets.push(lineHeight / 2);
 	}
-
-	gcLen = gc.length / 2;
-	if (gcLen > length) {
-		for (i = 0; i < gcLen; ++i) {
-			delete data[gc[i]];
+/*
+	helpers.each(cache, function(fontCache) {
+		var garbageCollect = fontCache.garbageCollect;
+		var gcLen = garbageCollect.length / 2;
+		if (gcLen > length) {
+			for (i = 0; i < gcLen; ++i) {
+				delete fontCache.data[gc[i]];
+			}
+			garbageCollect.splice(0, gcLen);
 		}
-		gc.splice(0, gcLen);
-	}
-
+	});
+*/
 	widest = widths.indexOf(Math.max.apply(null, widths));
 	highest = heights.indexOf(Math.max.apply(null, heights));
 
@@ -11048,12 +11097,12 @@ var scale_category = core_scale.extend({
 
 	getLabelForIndex: function(index, datasetIndex) {
 		var me = this;
-		var data = me.chart.data;
-		var isHorizontal = me.isHorizontal();
+		var chart = me.chart;
 
-		if (data.yLabels && !isHorizontal) {
-			return me.getRightValue(data.datasets[datasetIndex].data[index]);
+		if (chart.getDatasetMeta(datasetIndex).controller._getValueScaleId() === me.id) {
+			return me.getRightValue(chart.data.datasets[datasetIndex].data[index]);
 		}
+
 		return me.ticks[index - me.minIndex];
 	},
 
@@ -12991,8 +13040,8 @@ var scale_time = core_scale.extend({
 		max = parse(timeOpts.max, me) || max;
 
 		// In case there is no valid min/max, set limits based on unit time option
-		min = min === MAX_INTEGER ? +adapter.startOf(+new Date(), unit) : min;
-		max = max === MIN_INTEGER ? +adapter.endOf(+new Date(), unit) + 1 : max;
+		min = min === MAX_INTEGER ? +adapter.startOf(Date.now(), unit) : min;
+		max = max === MIN_INTEGER ? +adapter.endOf(Date.now(), unit) + 1 : max;
 
 		// Make sure that max is strictly higher than min (required by the lookup table)
 		me.min = Math.min(min, max);
@@ -13252,7 +13301,7 @@ helpers_core.merge(adapter$1, moment ? {
 		} else if (!(value instanceof moment)) {
 			value = moment(value);
 		}
-		return value.isValid() ? +value : null;
+		return value.isValid() ? value.valueOf() : null;
 	},
 
 	format: function(time, format) {
@@ -13260,7 +13309,7 @@ helpers_core.merge(adapter$1, moment ? {
 	},
 
 	add: function(time, amount, unit) {
-		return +moment(time).add(amount, unit);
+		return moment(time).add(amount, unit).valueOf();
 	},
 
 	diff: function(max, min, unit) {
@@ -13270,13 +13319,13 @@ helpers_core.merge(adapter$1, moment ? {
 	startOf: function(time, unit, weekday) {
 		time = moment(time);
 		if (unit === 'isoWeek') {
-			return +time.isoWeekday(weekday);
+			return time.isoWeekday(weekday).valueOf();
 		}
-		return +time.startOf(unit);
+		return time.startOf(unit).valueOf();
 	},
 
 	endOf: function(time, unit) {
-		return +moment(time).endOf(unit);
+		return moment(time).endOf(unit).valueOf();
 	},
 
 	// DEPRECATIONS
