@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'dartsfont';
+  src: url('../fonts/dartsfont.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/dartsfont.woff') format('woff'),
+       url('../fonts/dartsfont.ttf') format('truetype');
+}
+
+.dartsfont {
+  font-family: dartsfont, cursive;
+}
