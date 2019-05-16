@@ -5772,11 +5772,6 @@ var controller_radar = core_datasetController.extend({
 
 		values.tension = valueOrDefault$6(me._config.lineTension, me.chart.options.elements.line.tension);
 
-		// backward compatibility
-		if (values.fill === true) {
-			values.fill = 'start';
-		}
-
 		return values;
 	},
 
@@ -13782,31 +13777,15 @@ function decodeFill(el, index, count) {
 	}
 }
 
-function computeBoundary(source) {
+function computeLinearBoundary(source) {
 	var model = source.el._model || {};
 	var scale = source.el._scale || {};
 	var fill = source.fill;
 	var target = null;
-	var length, value, i, horizontal;
+	var horizontal;
 
 	if (isFinite(fill)) {
 		return null;
-	}
-
-	if (scale.getPointPositionForValue) {
-		length = scale.chart.data.labels.length;
-		target = length ? [] : null;
-		if (fill === 'start' || fill === 'end') {
-			value = fill === 'start' ? scale.min : scale.max;
-			for (i = 0; i < length; ++i) {
-				target.push(scale.getPointPositionForValue(i, value));
-			}
-			return target;
-		}
-		for (i = 0; i < length; ++i) {
-			target.push(scale.getBasePosition(i));
-		}
-		return target;
 	}
 
 	// Backward compatibility: until v3, we still need to support boundary values set on
@@ -13838,6 +13817,44 @@ function computeBoundary(source) {
 	}
 
 	return null;
+}
+
+function computeCircularBoundary(source) {
+	var scale = source.el._scale;
+	var options = scale.options;
+	var length = scale.chart.data.labels.length;
+	var fill = source.fill;
+	var target = [];
+	var start, end, center, i, point;
+
+	if (!length) {
+		return null;
+	}
+
+	start = options.ticks.reverse ? scale.max : scale.min;
+	end = options.ticks.reverse ? scale.min : scale.max;
+	center = scale.getPointPositionForValue(0, start);
+	for (i = 0; i < length; ++i) {
+		point = fill === 'start' || fill === 'end'
+			? scale.getPointPositionForValue(i, fill === 'start' ? start : end)
+			: scale.getBasePosition(i);
+		if (options.gridLines.circular) {
+			point.cx = center.x;
+			point.cy = center.y;
+			point.angle = scale.getIndexAngle(i) - Math.PI / 2;
+		}
+		target.push(point);
+	}
+	return target;
+}
+
+function computeBoundary(source) {
+	var scale = source.el._scale || {};
+
+	if (scale.getPointPositionForValue) {
+		return computeCircularBoundary(source);
+	}
+	return computeLinearBoundary(source);
 }
 
 function resolveTarget(sources, index, propagate) {
@@ -13891,7 +13908,7 @@ function isDrawable(point) {
 }
 
 function drawArea(ctx, curve0, curve1, len0, len1) {
-	var i;
+	var i, cx, cy, r;
 
 	if (!len0 || !len1) {
 		return;
@@ -13901,6 +13918,16 @@ function drawArea(ctx, curve0, curve1, len0, len1) {
 	ctx.moveTo(curve0[0].x, curve0[0].y);
 	for (i = 1; i < len0; ++i) {
 		helpers$1.canvas.lineTo(ctx, curve0[i - 1], curve0[i]);
+	}
+
+	if (curve1[0].angle !== undefined) {
+		cx = curve1[0].cx;
+		cy = curve1[0].cy;
+		r = Math.sqrt(Math.pow(curve1[0].x - cx, 2) + Math.pow(curve1[0].y - cy, 2));
+		for (i = len1 - 1; i > 0; --i) {
+			ctx.arc(cx, cy, r, curve1[i].angle, curve1[i - 1].angle, true);
+		}
+		return;
 	}
 
 	// joining the two area curves
