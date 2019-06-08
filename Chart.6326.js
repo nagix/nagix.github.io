@@ -10256,7 +10256,7 @@ core_defaults._set('scale', {
 	// grid line settings
 	gridLines: {
 		display: true,
-		color: 'rgba(0, 0, 0, 0.1)',
+		color: 'rgba(0,0,0,0.1)',
 		lineWidth: 1,
 		drawBorder: true,
 		drawOnChartArea: true,
@@ -11149,8 +11149,8 @@ var Scale = core_element.extend({
 				borderDash = gridLines.zeroLineBorderDash || [];
 				borderDashOffset = gridLines.zeroLineBorderDashOffset || 0.0;
 			} else {
-				lineWidth = valueAtIndexOrDefault(gridLines.lineWidth, index);
-				lineColor = valueAtIndexOrDefault(gridLines.color, index);
+				lineWidth = valueAtIndexOrDefault(gridLines.lineWidth, index, 1);
+				lineColor = valueAtIndexOrDefault(gridLines.color, index, 'rgba(0,0,0,0.1)');
 				borderDash = gridLines.borderDash || [];
 				borderDashOffset = gridLines.borderDashOffset || 0.0;
 			}
@@ -11237,10 +11237,10 @@ var Scale = core_element.extend({
 						y1: y1,
 						x2: x2,
 						y2: y2,
-						width: lineWidth,
-						color: lineColor,
-						borderDash: borderDash,
-						borderDashOffset: borderDashOffset,
+						width: valueAtIndexOrDefault(gridLines.lineWidth, index + 1, 1),
+						color: valueAtIndexOrDefault(gridLines.color, index + 1, 'rgba(0,0,0,0.1)'),
+						borderDash: gridLines.borderDash || [],
+						borderDashOffset: gridLines.borderDashOffset || 0.0,
 					});
 				}
 			}
@@ -12372,7 +12372,7 @@ var defaultConfig$3 = {
 
 	angleLines: {
 		display: true,
-		color: 'rgba(0, 0, 0, 0.1)',
+		color: 'rgba(0,0,0,0.1)',
 		lineWidth: 1,
 		borderDash: [],
 		borderDashOffset: 0.0
