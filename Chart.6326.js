@@ -10305,12 +10305,14 @@ core_defaults._set('scale', {
 	}
 });
 
-function getPixelForGridLine(scale, index, isRightmost) {
-	var lineValue = scale.getPixelForTick(index);
+function getPixelForGridLine(scale, index, offsetGridLines) {
+	var length = scale.getTicks().length;
+	var validIndex = Math.min(index, length - 1);
+	var lineValue = scale.getPixelForTick(validIndex);
 	var epsilon = 1e-6; // 1e-6 is margin in pixels for accumulated error.
 	var start, end, offset;
 
-	if (scale.options.gridLines.offsetGridLines) {
+	if (offsetGridLines) {
 		if (scale.isHorizontal()) {
 			start = scale.left;
 			end = scale.right;
@@ -10319,14 +10321,14 @@ function getPixelForGridLine(scale, index, isRightmost) {
 			end = scale.bottom;
 		}
 
-		if (scale.getTicks().length === 1) {
+		if (length === 1) {
 			offset = Math.max(lineValue - start, end - lineValue);
 		} else if (index === 0) {
 			offset = (scale.getPixelForTick(1) - lineValue) / 2;
 		} else {
-			offset = (lineValue - scale.getPixelForTick(index - 1)) / 2;
+			offset = (lineValue - scale.getPixelForTick(validIndex - 1)) / 2;
 		}
-		lineValue += isRightmost ? offset : -offset;
+		lineValue += validIndex < index ? offset : -offset;
 
 		// Return undefined if the pixel is out of the range
 		if (lineValue < start - epsilon || lineValue > end + epsilon) {
@@ -11132,13 +11134,19 @@ var Scale = core_element.extend({
 			tickEnd = me.left + tl;
 		}
 
+		if (offsetGridLines) {
+			ticks = ticks.concat([{extra: true}]);
+		}
+
 		helpers$1.each(ticks, function(tick, index) {
+			var label = tick.label;
+			var extra = tick.extra;
+
 			// autoskipper skipped this tick (#4635)
-			if (helpers$1.isNullOrUndef(tick.label)) {
+			if (helpers$1.isNullOrUndef(label) && !extra) {
 				return;
 			}
 
-			var label = tick.label;
 			var tickFont = tick.major ? tickFonts.major : tickFonts.minor;
 			var lineHeight = tickFont.lineHeight;
 			var lineWidth, lineColor, borderDash, borderDashOffset;
@@ -11158,7 +11166,7 @@ var Scale = core_element.extend({
 			// Common properties
 			var tx1, ty1, tx2, ty2, x1, y1, x2, y2, labelX, labelY, textOffset, textAlign;
 			var labelCount = helpers$1.isArray(label) ? label.length : 1;
-			var lineValue = getPixelForGridLine(me, index);
+			var lineValue = getPixelForGridLine(me, index, offsetGridLines);
 
 			if (isHorizontal) {
 				var labelYOffset = tl + tickPadding;
@@ -11220,40 +11228,17 @@ var Scale = core_element.extend({
 				});
 			}
 
-			if (index === ticks.length - 1 && offsetGridLines) {
-				lineValue = getPixelForGridLine(me, index, true);
-				if (lineValue !== undefined) {
-					if (isHorizontal) {
-						tx1 = tx2 = x1 = x2 = alignPixel(chart, lineValue, lineWidth);
-					} else {
-						ty1 = ty2 = y1 = y2 = alignPixel(chart, lineValue, lineWidth);
-					}
-					gridLineItems.push({
-						tx1: tx1,
-						ty1: ty1,
-						tx2: tx2,
-						ty2: ty2,
-						x1: x1,
-						y1: y1,
-						x2: x2,
-						y2: y2,
-						width: valueAtIndexOrDefault(gridLines.lineWidth, index + 1, 1),
-						color: valueAtIndexOrDefault(gridLines.color, index + 1, 'rgba(0,0,0,0.1)'),
-						borderDash: gridLines.borderDash || [],
-						borderDashOffset: gridLines.borderDashOffset || 0.0,
-					});
-				}
+			if (!extra) {
+				labelItems.push({
+					x: labelX,
+					y: labelY,
+					rotation: -labelRotationRadians,
+					label: label,
+					font: tick.major ? tickFonts.major : tickFonts.minor,
+					textOffset: textOffset,
+					textAlign: textAlign
+				});
 			}
-
-			labelItems.push({
-				x: labelX,
-				y: labelY,
-				rotation: -labelRotationRadians,
-				label: label,
-				font: tick.major ? tickFonts.major : tickFonts.minor,
-				textOffset: textOffset,
-				textAlign: textAlign
-			});
 		});
 
 		gridLineItems.ticksLength = ticks.length;
